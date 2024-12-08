@@ -1,6 +1,7 @@
 export const translations = {
   fr: {
     common: {
+      createCard:'Ajouter la carte',
       save: 'Enregistrer',
       saving: 'Enregistrement...',
       add: 'Ajouter',
@@ -71,19 +72,34 @@ export const translations = {
       displayName: 'Nom d\'affichage',
       comment: 'Commentaire',
       file: 'Fichier',
-      added: 'Ajouté le'
+      added: 'Ajouté le',
+      enterDocumentName:'Entrez un nom pour ce document',
+      addDocumentComment:'Ajouter un commentaire sur ce document...'
     },
     contacts: {
+      contacts:'Contacts',
+      contactDetails:'Coordonnées du contact',
       addContact: 'Ajouter un contact',
       editContact: 'Modifier le contact',
       title: 'Titre',
+      name:'Nom',
       firstName: 'Prénom',
       lastName: 'Nom',
       company: 'Société',
       position: 'Poste',
       email: 'Email',
       phone: 'Téléphone',
-      address: 'Adresse'
+      address: 'Adresse',
+      abrTitleMr:'M.',
+      abrTitleMs:'Mme.',
+      country:'Pays',
+      city:'Ville',
+      postalCode:'Code postal',
+      street:'Rue',
+      streetNumber:'Numéro de rue',
+      failedUpdateContact:'Échec de la mise à jour du contact :',
+      failedAddContact:"Échec de l'ajout du contact :",
+      failedFetchContact:'Échec de la récupération des contacts:',
     },
     settings: {
       title: 'Paramètres',
@@ -124,6 +140,7 @@ export const translations = {
   },
   en: {
     common: {
+      createCard:'Create card',
       save: 'Save',
       saving: 'Saving...',
       add: 'Add',
@@ -194,19 +211,34 @@ export const translations = {
       displayName: 'Display name',
       comment: 'Comment',
       file: 'File',
-      added: 'Added'
+      added: 'Added',
+      enterDocumentName:'Enter a name for this document',
+      addDocumentComment:'Add a comment about this document...'
     },
     contacts: {
+      contacts:'Contacts',
+      contactDetails:'Contact details',
       addContact: 'Add contact',
       editContact: 'Edit contact',
       title: 'Title',
+      name:'Name',
       firstName: 'First name',
       lastName: 'Last name',
       company: 'Company',
       position: 'Position',
       email: 'Email',
       phone: 'Phone',
-      address: 'Address'
+      address: 'Address',
+      abrTitleMr:'Mr.',
+      abrTitleMs:'Ms.',
+      country:'Country',
+      city:'City',
+      postalCode:'Postal code',
+      street:'Street',
+      streetNumber:'Street number',
+      failedUpdateContact:'Failed to update contact:',
+      failedAddContact:'Failed to add contact:',
+      failedFetchContact:'Failed to fetch contacts:',
     },
     settings: {
       title: 'Settings',
@@ -247,6 +279,7 @@ export const translations = {
   },
   es: {
     common: {
+      createCard:'crear tarjeta',
       save: 'Guardar',
       saving: 'Guardando...',
       add: 'Añadir',
@@ -317,19 +350,34 @@ export const translations = {
       displayName: 'Nombre para mostrar',
       comment: 'Comentario',
       file: 'Archivo',
-      added: 'Añadido'
+      added: 'Añadido',
+      enterDocumentName:'Introduzca un nombre para este documento',
+      addDocumentComment:'Añadir un comentario a este documento...'
     },
     contacts: {
+      contacts:'Contactos',
+      contactDetails:'Detalles de contacto',
       addContact: 'Añadir contacto',
       editContact: 'Editar contacto',
       title: 'Título',
+      name:'Nombre',
       firstName: 'Nombre',
       lastName: 'Apellido',
       company: 'Empresa',
       position: 'Cargo',
       email: 'Correo electrónico',
       phone: 'Teléfono',
-      address: 'Dirección'
+      address: 'Dirección',
+      abrTitleMr:'Sr.',
+      abrTitleMs:'Sra.',
+      country:'País',
+      city:'Ciudad',
+      postalCode:'Código postal',
+      street:'Calle',
+      streetNumber:'Numero de calle',
+      failedUpdateContact:'No se pudo actualizar el contacto:',
+      failedAddContact:'No se pudo agregar el contacto:',
+      failedFetchContact:'No se pudieron recuperar los contactos:',
     },
     settings: {
       title: 'Configuración',

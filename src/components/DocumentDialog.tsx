@@ -75,7 +75,7 @@ export function DocumentDialog({ onSave, onCancel }: DocumentDialogProps) {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Enter a name for this document"
+              placeholder={t('documents.enterDocumentName')}
             />
           </div>
 
@@ -88,7 +88,7 @@ export function DocumentDialog({ onSave, onCancel }: DocumentDialogProps) {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none"
-              placeholder="Add a comment about this document..."
+              placeholder={t('documents.addDocumentComment')}
             />
           </div>
 

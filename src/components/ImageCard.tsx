@@ -166,12 +166,12 @@ export function ImageCard({
             >
               <Trash2 size={18} />
             </button>
-            <button
+            {!isEditing && <button
               onClick={() => toggleCardExpansion(id)}
               className="p-1 hover:bg-gray-100 rounded"
             >
               {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-            </button>
+            </button>}
           </div>
         </div>
 
@@ -185,7 +185,7 @@ export function ImageCard({
           ) : (
             <div className="flex items-center justify-center h-full">
               <label className="cursor-pointer px-4 py-2 bg-violet-100 text-violet-700 rounded-lg hover:bg-violet-200 transition-colors">
-                Upload Image
+              {t('cards.uploadImage')}
                 <input
                   type="file"
                   accept="image/*"
@@ -201,7 +201,7 @@ export function ImageCard({
         {isEditing && (
           <div className="mt-2 flex justify-between">
             <label className="cursor-pointer px-3 py-1 text-sm bg-violet-100 text-violet-700 rounded hover:bg-violet-200 transition-colors">
-              Change Image
+              {t('cards.changeImage')}
               <input
                 type="file"
                 accept="image/*"

@@ -150,12 +150,12 @@ export function BudgetCard({
             >
               <Trash2 size={18} />
             </button>
-            <button
+            {!isEditing &&<button
               onClick={() => toggleCardExpansion(id)}
               className="p-1 hover:bg-gray-100 rounded"
             >
               {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-            </button>
+            </button>}
           </div>
         </div>
 

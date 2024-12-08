@@ -129,19 +129,20 @@ export function Card({
             >
               <Trash2 size={18} />
             </button>
+            {!isEditing &&
             <button
               onClick={() => toggleCardExpansion(id)}
               className="p-1 hover:bg-gray-100 rounded"
               title={isExpanded ? t('cards.minimize') : t('cards.maximize')}
             >
               {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-            </button>
+            </button>}
           </div>
         </div>
         {isEditing ? (
           <>
             <textarea
-              value={localContent}
+              placeholder={localContent}
               onChange={(e) => setLocalContent(e.target.value)}
               className="flex-1 px-2 py-1 border rounded resize-none mb-4 bg-white min-h-[120px]"
             />

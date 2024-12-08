@@ -3,6 +3,7 @@ import { Eye, Plus } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { useCardStore } from '../store/cardStore';
 import { geocodeAddress } from '../utils/geocoding';
+import { useI18n } from '../i18n/useTranslation';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -25,7 +26,7 @@ function MapUpdater({ center }: { center: [number, number] }) {
 
 interface Contact {
   id: string;
-  title: 'M.' | 'Mme.' | 'Société';
+  title: string;
   firstName?: string;
   lastName?: string;
   company?: string;
@@ -48,11 +49,13 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const { t } = useI18n();
   const [newContact, setNewContact] = useState<Partial<Contact>>({
-    title: 'M.',
+    title: t('contacts.abrTitleMr'),
   });
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+
   const addCard = useCardStore((state) => state.addCard);
 
   useEffect(() => {
@@ -80,7 +83,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
       }));
       setContacts(formattedContacts);
     } catch (error) {
-      console.error('Failed to fetch contacts:', error);
+      console.error(t('contacts.failedFetchContact'), error);
     }
   };
 
@@ -104,10 +107,10 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
 
       if (response.ok) {
         fetchContacts();
-        setNewContact({ title: 'M.' });
+        setNewContact({ title: t('contacts.abrTitleMr') });
       }
     } catch (error) {
-      console.error('Failed to add contact:', error);
+      console.error(t('contacts.failedAddContact'), error);
     }
   };
 
@@ -137,7 +140,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
         setShowDetails(false);
       }
     } catch (error) {
-      console.error('Failed to update contact:', error);
+      console.error(t('contacts.failedUpdateContact'), error);
     }
   };
 
@@ -178,7 +181,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
 
     addCard({
       id,
-      title: contact.title === 'Société' 
+      title: contact.title === t('contacts.company')
         ? `${contact.company}`
         : `${contact.title} ${contact.firstName} ${contact.lastName}`,
       content,
@@ -199,7 +202,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
       <div className="bg-white/95 rounded-2xl shadow-2xl border border-indigo-100 p-8 w-[80rem] h-[80vh] flex gap-8">
         {/* Contact List */}
         <div className="w-1/3 border-r border-indigo-100 pr-8">
-          <h3 className="text-2xl font-semibold mb-6 text-indigo-900">Contacts</h3>
+          <h3 className="text-2xl font-semibold mb-6 text-indigo-900">{t('contacts.contacts')}</h3>
           <div className="space-y-3 overflow-auto max-h-[calc(80vh-10rem)] pr-2">
             {contacts.map((contact) => (
               <button
@@ -210,11 +213,11 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
               >
                 <div className="flex-1">
                   <div className="font-semibold text-indigo-900">
-                    {contact.title === 'Société' 
+                    {contact.title === t('contacts.company') 
                       ? contact.company || 'Unnamed Company'
                       : `${contact.title} ${contact.firstName || ''} ${contact.lastName || ''}`.trim()}
                   </div>
-                  {contact.company && contact.title !== 'Société' && (
+                  {contact.company && contact.title !== t('contacts.company') && (
                     <div className="text-sm text-indigo-600 font-medium mt-0.5">{contact.company}</div>
                   )}
                   {contact.position && (
@@ -251,32 +254,32 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
 
         {/* New Contact Form */}
         <div className="flex-1 px-4">
-          <h3 className="text-2xl font-semibold mb-6 text-indigo-900">Add New Contact</h3>
+          <h3 className="text-2xl font-semibold mb-6 text-indigo-900">{t('contacts.addContact')}</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                  Title
+                  {t('contacts.title')}
                 </label>
                 <select
                   value={newContact.title}
                   onChange={(e) => setNewContact({ 
                     ...newContact, 
-                    title: e.target.value as 'M.' | 'Mme.' | 'Société'
+                    title: e.target.value 
                   })}
                   className="w-full px-4 py-2.5 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/50"
                 >
-                  <option value="M.">M.</option>
-                  <option value="Mme.">Mme.</option>
-                  <option value="Société">Société</option>
+                  <option value={t('contacts.abrTitleMr')}>{t('contacts.abrTitleMr')}</option>
+                  <option value={t('contacts.abrTitleMs')}>{t('contacts.abrTitleMs')}</option>
+                  <option value={t('contacts.company')}>{t('contacts.company')}</option>
                 </select>
               </div>
 
-              {newContact.title !== 'Société' && (
+              {newContact.title !== t('contacts.company') && (
                 <>
                   <div>
                     <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                      First Name
+                    {t('contacts.firstName')}
                     </label>
                     <input
                       type="text"
@@ -287,7 +290,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                      Last Name
+                    {t('contacts.lastName')}
                     </label>
                     <input
                       type="text"
@@ -303,7 +306,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                  Company
+                {t('contacts.company')}
                 </label>
                 <input
                   type="text"
@@ -314,7 +317,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                  Position
+                {t('contacts.position')}
                 </label>
                 <input
                   type="text"
@@ -328,7 +331,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                  Street Number
+                {t('contacts.streetNumber')}
                 </label>
                 <input
                   type="text"
@@ -339,7 +342,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
               </div>
               <div className="col-span-2">
                 <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                  Street
+                {t('contacts.street')}
                 </label>
                 <input
                   type="text"
@@ -353,7 +356,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                  Postal Code
+                {t('contacts.postalCode')}
                 </label>
                 <input
                   type="text"
@@ -364,7 +367,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                  City
+                {t('contacts.city')}
                 </label>
                 <input
                   type="text"
@@ -375,7 +378,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                  Country
+                {t('contacts.country')}
                 </label>
                 <input
                   type="text"
@@ -389,7 +392,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                  Email
+                {t('contacts.email')}
                 </label>
                 <input
                   type="email"
@@ -400,7 +403,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-indigo-900 mb-2">
-                  Phone
+                {t('contacts.phone')}
                 </label>
                 <input
                   type="tel"
@@ -417,13 +420,13 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                 onClick={onClose}
                 className="px-6 py-2.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
               >
-                Close
+                {t('common.close')}
               </button>
               <button
                 type="submit"
                 className="px-6 py-2.5 text-sm font-medium bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg"
               >
-                Add Contact
+                {t('contacts.addContact')}
               </button>
             </div>
           </form>
@@ -434,34 +437,34 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
       {showDetails && selectedContact && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
           <div className="bg-white/95 rounded-2xl shadow-2xl border border-indigo-100 p-8 w-[40rem] max-h-[80vh] overflow-y-auto">
-            <h3 className="text-2xl font-semibold mb-6 text-indigo-900">Contact Details</h3>
+            <h3 className="text-2xl font-semibold mb-6 text-indigo-900">{t('contacts.contactDetails')}</h3>
             
             {isEditing ? (
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Title
+                    {t('contacts.title')}
                     </label>
                     <select
                       value={editingContact?.title}
                       onChange={(e) => setEditingContact(prev => prev ? {
                         ...prev,
-                        title: e.target.value as 'M.' | 'Mme.' | 'Société'
+                        title: e.target.value 
                       } : null)}
                       className="w-full px-3 py-2 border rounded-md"
                     >
-                      <option value="M.">M.</option>
-                      <option value="Mme.">Mme.</option>
-                      <option value="Société">Société</option>
+                      <option value={t('contacts.abrTitleMr')}>{t('contacts.abrTitleMr')}</option>
+                      <option value={t('contacts.abrTitleMs')}>{t('contacts.abrTitleMs')}</option>
+                      <option value={t('contacts.company')}>{t('contacts.company')}</option>
                     </select>
                   </div>
 
-                  {editingContact?.title !== 'Société' && (
+                  {editingContact?.title !== t('contact.company') && (
                     <>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          First Name
+                        {t('contacts.firstName')}
                         </label>
                         <input
                           type="text"
@@ -475,7 +478,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Last Name
+                        {t('contacts.lastName')}
                         </label>
                         <input
                           type="text"
@@ -494,7 +497,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Company
+                    {t('contacts.company')}
                     </label>
                     <input
                       type="text"
@@ -508,7 +511,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Position
+                    {t('contacts.position')}
                     </label>
                     <input
                       type="text"
@@ -525,7 +528,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Street Number
+                    {t('contacts.streetNumber')}
                     </label>
                     <input
                       type="text"
@@ -539,7 +542,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                   </div>
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Street
+                    {t('contacts.street')}
                     </label>
                     <input
                       type="text"
@@ -556,7 +559,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Postal Code
+                    {t('contacts.postalCode')}
                     </label>
                     <input
                       type="text"
@@ -570,7 +573,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      City
+                    {t('contacts.city')}
                     </label>
                     <input
                       type="text"
@@ -584,7 +587,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Country
+                    {t('contacts.country')}
                     </label>
                     <input
                       type="text"
@@ -601,7 +604,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email
+                    {t('contacts.email')}
                     </label>
                     <input
                       type="email"
@@ -615,7 +618,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone
+                    {t('contacts.phone')}
                     </label>
                     <input
                       type="tel"
@@ -638,13 +641,13 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                     }}
                     className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-4 py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
                   >
-                    Save Changes
+                    {t('common.save')}
                   </button>
                 </div>
               </form>
@@ -653,13 +656,13 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-500">Title</label>
+                      <label className="block text-sm font-medium text-gray-500">{t('contacts.title')}</label>
                       <div className="mt-1">{selectedContact.title}</div>
                     </div>
-                    {selectedContact.title !== 'Société' && (
+                    {selectedContact.title !== t('contacts.company') && (
                       <>
                         <div>
-                          <label className="block text-sm font-medium text-gray-500">Name</label>
+                          <label className="block text-sm font-medium text-gray-500">{t('contacts.name')}</label>
                           <div className="mt-1">
                             {selectedContact.firstName} {selectedContact.lastName}
                           </div>
@@ -669,17 +672,17 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-500">Company</label>
+                    <label className="block text-sm font-medium text-gray-500">{t('contacts.company')}</label>
                     <div className="mt-1">{selectedContact.company || '-'}</div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-500">Position</label>
+                    <label className="block text-sm font-medium text-gray-500">{t('contacts.position')}</label>
                     <div className="mt-1">{selectedContact.position || '-'}</div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-500">Address</label>
+                    <label className="block text-sm font-medium text-gray-500">{t('contacts.address')}</label>
                     <div className="mt-1">
                       {(selectedContact.streetNumber || selectedContact.street) && (
                         <>{[selectedContact.streetNumber, selectedContact.street].filter(Boolean).join(' ')}<br /></>
@@ -710,11 +713,11 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-500">Email</label>
+                      <label className="block text-sm font-medium text-gray-500">{t('contacts.email')}</label>
                       <div className="mt-1">{selectedContact.email || '-'}</div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-500">Phone</label>
+                      <label className="block text-sm font-medium text-gray-500">{t('contacts.phone')}</label>
                       <div className="mt-1">{selectedContact.phone || '-'}</div>
                     </div>
                   </div>
@@ -725,7 +728,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                     onClick={() => setShowDetails(false)}
                     className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
                   >
-                    Close
+                    {t('common.close')}
                   </button>
                   <button
                     onClick={() => {
@@ -734,7 +737,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                     }}
                     className="px-4 py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
                   >
-                    Edit Contact
+                    {t('contacts.editContact')}
                   </button>
                   <button
                     onClick={() => {
@@ -743,7 +746,7 @@ export function ContactDialog({ onClose }: ContactDialogProps) {
                     }}
                     className="px-4 py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
                   >
-                    Create Card
+                    {t('common.createCard')}
                   </button>
                 </div>
               </>
