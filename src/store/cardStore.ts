@@ -25,8 +25,6 @@ export interface Card {
   };
   imageData?: string;
   mimeType?: string;
-  imageData?: string;
-  mimeType?: string;
   groupId?: string | null;
 }
 
