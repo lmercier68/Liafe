@@ -3,6 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { Maximize2, Minimize2, Link, Unlink, Calendar, Trash2, Plus } from 'lucide-react';
 import { useCardStore, CARD_COLORS } from '../store/cardStore';
 import { ColorPicker } from './ColorPicker';
+import { useI18n } from '../i18n/useTranslation';
 
 interface BudgetCardProps {
   id: string;
@@ -37,6 +38,7 @@ export function BudgetCard({
   incomingConnections,
   onConnect
 }: BudgetCardProps) {
+  const { t } = useI18n();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
   const [isEditing, setIsEditing] = useState(false);
   const [localTitle, setLocalTitle] = useState(title);
@@ -165,7 +167,7 @@ export function BudgetCard({
               {isEditing ? (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Total Amount</label>
+                    <label className="block text-sm font-medium mb-1">{t('budget.totalAmount')}</label>
                     <input
                       type="number"
                       value={localBudgetData.totalAmount || 0}
@@ -180,7 +182,7 @@ export function BudgetCard({
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Available Amount</label>
+                    <label className="block text-sm font-medium mb-1">{t('budget.availableAmount')}</label>
                     <input
                       type="number"
                       value={localBudgetData.availableAmount || 0}
@@ -198,12 +200,12 @@ export function BudgetCard({
               ) : (
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>Total:</span>
-                    <span className="font-medium">${localBudgetData.totalAmount || 0}</span>
+                    <span>{t('budget.total')}:</span>
+                    <span className="font-medium">{t('budget.devise')}{localBudgetData.totalAmount || 0}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Available:</span>
-                    <span className="font-medium">${localBudgetData.availableAmount || 0}</span>
+                    <span>{t('budget.available')}:</span>
+                    <span className="font-medium">{t('budget.devise')}{localBudgetData.availableAmount || 0}</span>
                   </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
@@ -212,7 +214,7 @@ export function BudgetCard({
                     />
                   </div>
                   <div className="text-sm text-center text-gray-600">
-                    {calculatePercentage()}% available
+                    {calculatePercentage()}% {t('budget.available')}
                   </div>
                 </div>
               )}
@@ -222,7 +224,7 @@ export function BudgetCard({
               {isEditing ? (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Initial Budget</label>
+                    <label className="block text-sm font-medium mb-1">{t('budget.initialBudget')}</label>
                     <input
                       type="number"
                       value={localBudgetData.totalAmount || 0}
@@ -234,7 +236,7 @@ export function BudgetCard({
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Add Expense</label>
+                    <label className="block text-sm font-medium mb-1">{t('budget.addExpense')}</label>
                     <div className="flex gap-2">
                       <input
                         type="number"
@@ -272,18 +274,18 @@ export function BudgetCard({
               ) : (
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>Initial Budget:</span>
-                    <span className="font-medium">${localBudgetData.totalAmount || 0}</span>
+                    <span>{t('budget.initialBudget')}:</span>
+                    <span className="font-medium">{t('budget.devise')}{localBudgetData.totalAmount || 0}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Spent:</span>
+                    <span>{t('budget.spent')}:</span>
                     <span className="font-medium">
-                      ${localBudgetData.expenses?.reduce((sum, exp) => sum + exp.amount, 0) || 0}
+                    {t('budget.devise')}{localBudgetData.expenses?.reduce((sum, exp) => sum + exp.amount, 0) || 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Remaining:</span>
-                    <span className="font-medium">${localBudgetData.availableAmount || 0}</span>
+                    <span>{t('budget.remaining')}:</span>
+                    <span className="font-medium">{t('budget.devise')}{localBudgetData.availableAmount || 0}</span>
                   </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
@@ -295,12 +297,12 @@ export function BudgetCard({
               )}
               {isExpanded && budgetType === 'expenses-tracking' && (
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium mb-2">Recent Expenses</h4>
+                  <h4 className="text-sm font-medium mb-2">{t('budget.recentExpenses')}</h4>
                   <div className="max-h-24 overflow-auto">
                     {localBudgetData.expenses?.map((expense, index) => (
                       <div key={index} className="flex justify-between items-center py-1 border-b">
                         <span className="text-sm">{expense.description}</span>
-                        <span className="text-sm font-medium">${expense.amount}</span>
+                        <span className="text-sm font-medium">{t('budget.devise')}{expense.amount}</span>
                       </div>
                     ))}
                   </div>

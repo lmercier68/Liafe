@@ -53,6 +53,7 @@ export const translations = {
       }
     },
     budget: {
+      devise:'€',
       overview: 'Aperçu du budget',
       expenseTracker: 'Suivi des dépenses',
       total: 'Total',
@@ -64,7 +65,9 @@ export const translations = {
       initialBudget: 'Budget initial',
       spent: 'Dépensé',
       remaining: 'Restant',
-      recentExpenses: 'Dépenses récentes'
+      recentExpenses: 'Dépenses récentes',
+      totalAmount:'Montant total',
+      availableAmount:'Montant disponible',
     },
     documents: {
       addDocument: 'Ajouter un document',
@@ -192,6 +195,7 @@ export const translations = {
       }
     },
     budget: {
+      devise:'$',
       overview: 'Budget Overview',
       expenseTracker: 'Expense Tracker',
       total: 'Total',
@@ -203,7 +207,9 @@ export const translations = {
       initialBudget: 'Initial budget',
       spent: 'Spent',
       remaining: 'Remaining',
-      recentExpenses: 'Recent expenses'
+      recentExpenses: 'Recent expenses',
+      totalAmount:'Total amount',
+      availableAmount:'Available amount',
     },
     documents: {
       addDocument: 'Add document',
@@ -331,6 +337,9 @@ export const translations = {
       }
     },
     budget: {
+      devise:'€',
+      totalAmount:'Monto total',
+      availableAmount:'Cantidad disponible',
       overview: 'Resumen del presupuesto',
       expenseTracker: 'Seguimiento de gastos',
       total: 'Total',
