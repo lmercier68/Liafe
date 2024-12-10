@@ -23,17 +23,19 @@ export interface Card {
       date: string;
     }>;
   };
-  locationData?: {
-    streetNumber?: string;
-    street?: string;
-    postalCode?: string;
-    city?: string;
-    country?: string;
-    coordinates?: [number, number];
-  };
+  locationData?: LocationData;
   imageData?: string;
   mimeType?: string;
   groupId?: string | null;
+}
+
+interface LocationData {
+  streetNumber?: string;
+  street?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
+  coordinates?: [number, number];
 }
 
 export interface Connection {
@@ -141,11 +143,16 @@ function toDbCard(card: Card): DbCard {
     }
   }
   
-  const cardType = card.imageData ? 'image' : card.budgetType ? 'budget' : 'standard';
-  const imageData = card.imageData ? card.imageData : null;
+  const cardType = card.cardType || 'standard';
+  const imageData = card.imageData || null;
+  let locationData = null;
+  if (card.cardType === 'location' && card.locationData) {
+    locationData = JSON.stringify(card.locationData);
+  }
 
   return {
     id: card.id,
+    set_id: '', // This will be set by the saveSet function
     title: card.title,
     content: card.content,
     position_x: card.position.x,
@@ -154,11 +161,13 @@ function toDbCard(card: Card): DbCard {
     is_expanded: card.isExpanded ? 1 : 0,
     due_date: card.dueDate,
     status: card.status,
-    budget_type: card.budgetType as string || null,
+    budget_type: card.budgetType || null,
     budget_data: budgetData,
     image_data: imageData,
     mime_type: card.mimeType || null,
-    card_type: cardType
+    location_data: locationData,
+    card_type: card.cardType || 'standard'
+  
   };
 }
 
@@ -189,6 +198,18 @@ function fromDbCard(dbCard: DbCard): Card {
     };
   }
 
+  let locationData: LocationData | undefined;
+  try {
+    if (dbCard.card_type === 'location' && dbCard.location_data) {
+      locationData = typeof dbCard.location_data === 'object'
+        ? dbCard.location_data
+        : JSON.parse(dbCard.location_data);
+    }
+  } catch (error) {
+    console.error('Failed to parse location data:', error);
+    locationData = undefined;
+  }
+
   return {
     id: dbCard.id,
     title: dbCard.title,
@@ -201,11 +222,12 @@ function fromDbCard(dbCard: DbCard): Card {
     isExpanded: Boolean(dbCard.is_expanded),
     dueDate: dbCard.due_date,
     status: dbCard.status,
-    cardType: dbCard.card_type as 'standard' | 'budget' | 'image',
     budgetType: dbCard.budget_type as 'total-available' | 'expenses-tracking',
     budgetData: budgetData,
-    imageData: dbCard.image_data ? dbCard.image_data.toString('base64') : undefined,
-    mimeType: dbCard.mime_type || undefined
+    imageData: dbCard.image_data || undefined,
+    mimeType: dbCard.mime_type || undefined,
+    cardType: dbCard.card_type,
+    locationData: locationData
   };
 }
 
@@ -469,52 +491,72 @@ export const useCardStore = create<CardState>()((set, get) => ({
     }));
   },
   saveToDb: async (name: string) => {
-    console.log('Starting saveToDb with name:', name);
-    const { cards, connections, groups, groupConnections } = get();
-    const currentSetId = get().currentSetId;
-    const setId = currentSetId || crypto.randomUUID();
-    
-    // Transform groups data for database
-    const dbGroups = groups.map(group => ({
-      id: group.id,
-      set_id: setId,
-      name: group.name,
-      bounds_x: group.bounds.x,
-      bounds_y: group.bounds.y,
-      bounds_width: group.bounds.width,
-      bounds_height: group.bounds.height,
-      is_minimized: group.isMinimized,
-      original_width: group.originalBounds?.width || null,
-      original_height: group.originalBounds?.height || null
-    }));
-
-    // Transform connections for database
-    const dbConnections = connections.map(conn => ({
-      start_id: conn.start,
-      end_id: conn.end,
-      set_id: setId,
-      style: conn.style,
-      color: conn.color
-    }));
-
-    // Transform group connections for database
-    const dbGroupConnections = groupConnections.map(conn => ({
-      start_id: conn.start,
-      end_id: conn.end,
-      set_id: setId,
-      style: conn.style,
-      color: conn.color
-    }));
-
-    await saveSet(
-      name,
-      cards.map(toDbCard),
-      dbConnections,
-      dbGroups,
-      dbGroupConnections,
-      currentSetId
-    );
-    set({ currentSetId: setId });
+    try {
+      console.log('Starting saveToDb with name:', name);
+      const { cards, connections, groups, groupConnections } = get();
+      const currentSetId = get().currentSetId;
+      const setId = currentSetId || crypto.randomUUID();
+      
+      // Préparer les données pour l'API
+      const payload = {
+        id: setId,
+        name,
+        cards: cards.map(card => {
+          const dbCard = toDbCard(card);
+          dbCard.set_id = setId;
+          return dbCard;
+        }),
+        connections: connections.map(conn => ({
+          start_id: conn.start,
+          end_id: conn.end,
+          set_id: setId,
+          style: conn.style,
+          color: conn.color
+        })),
+        groups: groups.map(group => ({
+          id: group.id,
+          set_id: setId,
+          name: group.name,
+          bounds_x: group.bounds.x,
+          bounds_y: group.bounds.y,
+          bounds_width: group.bounds.width,
+          bounds_height: group.bounds.height,
+          is_minimized: group.isMinimized,
+          original_width: group.originalBounds?.width || null,
+          original_height: group.originalBounds?.height || null
+        })),
+        groupConnections: groupConnections.map(conn => ({
+          start_id: conn.start,
+          end_id: conn.end,
+          set_id: setId,
+          style: conn.style,
+          color: conn.color
+        }))
+      };
+  
+      console.log('Sending payload to server:', payload);
+  
+      const response = await fetch('http://localhost:3000/api/sets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Server error: ${errorData.error}\nDetails: ${errorData.details}`);
+      }
+  
+      const data = await response.json();
+      set({ currentSetId: setId });
+      console.log('Save successful:', data);
+      return data;
+    } catch (error) {
+      console.error('Failed to save to database:', error);
+      throw error;
+    }
   },
   loadFromDb: async (setId?: string) => {
     try {

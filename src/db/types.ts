@@ -4,6 +4,21 @@ export interface DbCardSet {
   created_at: number;
 }
 
+export interface DbLocationCard {
+  id: string;
+  card_id: string;
+  location_data: string; // JSON string contenant toutes les données de localisation
+}
+
+export interface LocationData {
+  streetNumber?: string;
+  street?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
+  coordinates?: [number, number];
+}
+
 export interface DbCard {
   id: string;
   set_id: string;
@@ -15,11 +30,12 @@ export interface DbCard {
   is_expanded: number;
   due_date: string | null;
   status: 'todo' | 'in-progress' | 'done' | null;
-  card_type: 'standard' | 'budget' | 'image' | 'contact';
+  card_type: 'standard' | 'budget' | 'image' | 'contact' | 'location';
   budget_type: string | null;
   budget_data: string | null;
   image_data: string | null;
   mime_type: string | null;
+  location_data?: string | null;
 }
 
 export interface DbConnection {
