@@ -1,3 +1,4 @@
+
 export const translations = {
   fr: {
     common: {
@@ -35,6 +36,9 @@ export const translations = {
       addImage: 'Ajouter une image',
       addContact: 'Ajouter un contact',
       addBudget: 'Ajouter un budget',
+      location: 'Position',
+      locationCard: 'Carte de position',
+      routeCard: 'Carte d\'itinéraire',
       createGroup: 'Créer un groupe',
       cancelGroup: 'Annuler le groupe',
       save: 'Enregistrer',
@@ -177,6 +181,9 @@ export const translations = {
       addImage: 'Add image',
       addContact: 'Add contact',
       addBudget: 'Add budget',
+      location: 'Location',
+      locationCard: 'Location card',
+      routeCard: 'Route card',
       createGroup: 'Create group',
       cancelGroup: 'Cancel group',
       save: 'Save',
@@ -319,6 +326,9 @@ export const translations = {
       addImage: 'Añadir imagen',
       addContact: 'Añadir contacto',
       addBudget: 'Añadir presupuesto',
+      location: 'Ubicación',
+      locationCard: 'Tarjeta de ubicación',
+      routeCard: 'Tarjeta de ruta',
       createGroup: 'Crear grupo',
       cancelGroup: 'Cancelar grupo',
       save: 'Guardar',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Save, FolderOpen, FileText, Users, Group, Wallet, Settings, Image } from 'lucide-react';
+import { Plus, Save, FolderOpen, FileText, Users, Group, Wallet, Settings, Image, MapPin, Map, Navigation } from 'lucide-react';
 import { useCardStore } from '../store/cardStore';
 import { DocumentDialog } from './DocumentDialog';
 import { SaveDialog } from './SaveDialog';
@@ -23,6 +23,7 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [showBudgetTypeDialog, setShowBudgetTypeDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [showLocationMenu, setShowLocationMenu] = useState(false);
   const [sets, setSets] = useState<Array<{ id: string; name: string; created_at: number; }>>([]);
 
   const handleAddDocument = async (displayName: string, filePath: string, comment: string) => {
@@ -232,6 +233,44 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
           {t('sidebar.addBudget')}
           </span>
         </button>
+        <button
+          className="w-12 h-12 bg-sky-600 rounded-lg flex items-center justify-center text-white hover:bg-sky-700 transition-colors duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative group"
+          onClick={() => setShowLocationMenu(!showLocationMenu)}
+          disabled={disabled}
+        >
+          <MapPin size={24} />
+          <span className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">
+            {t('sidebar.location')}
+          </span>
+        </button>
+        {showLocationMenu && (
+          <div className="fixed left-14 ml-2 bg-gray-900 rounded-lg shadow-xl p-2 flex gap-2 items-center" style={{ top: `${ 5 * 4 +1}rem` }}>
+            <button
+              className="p-2 hover:bg-gray-800 rounded-lg group relative flex items-center justify-center"
+              onClick={() => {
+                // Handle location card creation - to be implemented
+                setShowLocationMenu(false);
+              }}
+            >
+              <Map size={24} className="text-white" />
+              <span className="absolute top-full mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">
+                {t('sidebar.locationCard')}
+              </span>
+            </button>
+            <button
+              className="p-2 hover:bg-gray-800 rounded-lg group relative flex items-center justify-center"
+              onClick={() => {
+                // Handle route card creation - to be implemented
+                setShowLocationMenu(false);
+              }}
+            >
+              <Navigation size={24} className="text-white" />
+              <span className="absolute top-full mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">
+                {t('sidebar.routeCard')}
+              </span>
+            </button>
+          </div>
+        )}
         <button
           onClick={onToggleGroupCreation}
           className={`w-12 h-12 rounded-lg flex items-center justify-center text-white transition-colors duration-200 shadow-lg ${
