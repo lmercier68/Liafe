@@ -12,7 +12,7 @@ export interface Card {
   isExpanded: boolean;
   dueDate: string | null;
   status: 'todo' | 'in-progress' | 'done' | null;
-  cardType?: 'standard' | 'budget' | 'image' | 'contact';
+  cardType?: 'standard' | 'budget' | 'image' | 'contact' | 'location';
   budgetType?: 'total-available' | 'expenses-tracking';
   budgetData?: {
     totalAmount?: number;
@@ -22,6 +22,14 @@ export interface Card {
       description: string;
       date: string;
     }>;
+  };
+  locationData?: {
+    streetNumber?: string;
+    street?: string;
+    postalCode?: string;
+    city?: string;
+    country?: string;
+    coordinates?: [number, number];
   };
   imageData?: string;
   mimeType?: string;
@@ -88,7 +96,7 @@ interface CardState {
 export const CARD_COLORS = {
   slate: 'bg-slate-100 border-slate-200',
   red: 'bg-red-100 border-red-200',
-   orange: 'bg-orange-100 border-orange-200',
+  orange: 'bg-orange-100 border-orange-200',
   amber: 'bg-amber-100 border-amber-200',
   yellow: 'bg-yellow-100 border-yellow-200',
   lime: 'bg-lime-100 border-lime-200',
@@ -96,6 +104,7 @@ export const CARD_COLORS = {
   emerald: 'bg-emerald-100 border-emerald-200',
   teal: 'bg-teal-100 border-teal-200',
   cyan: 'bg-cyan-100 border-cyan-200',
+  sky: 'bg-sky-100 border-sky-200', 
 } as const;
 
 export const LINE_COLORS = {
@@ -109,7 +118,9 @@ export const LINE_COLORS = {
   emerald: '#10b981',
   teal: '#14b8a6',
   cyan: '#06b6d4',
+  sky: '#0ea5e9', 
 } as const;
+
 
 function toDbCard(card: Card): DbCard {
   let budgetData = null;
