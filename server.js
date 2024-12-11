@@ -162,6 +162,15 @@ await db.query(`
     )
   `);
 
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS itineraire_cards (
+      id VARCHAR(36) PRIMARY KEY,
+      card_id VARCHAR(36) NOT NULL,
+      itineraire_data JSON NOT NULL,
+      FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE
+    )
+  `);
+
 await db.query(`
   CREATE TABLE IF NOT EXISTS group_connections (
     start_id VARCHAR(36) NOT NULL,
@@ -319,6 +328,15 @@ app.get('/api/sets/:setId', async (req, res) => {
           card.location_data = locationData[0].location_data;
         }
       }
+      if (card.card_type === 'itineraire') {
+        const [itineraireData] = await db.query(
+          'SELECT itineraire_data FROM itineraire_cards WHERE card_id = ?',
+          [card.id]
+        );
+        if (itineraireData.length > 0) {
+          card.itineraire_data = itineraireData[0].itineraire_data;
+        }
+      }
     }
     
     const [connections] = await db.query('SELECT * FROM connections WHERE set_id = ?', [req.params.setId]);
@@ -421,6 +439,24 @@ app.post('/api/sets', async (req, res) => {
             ]
           );
         }
+     
+       
+        console.log('perso log iti:', card.itineraireData);
+        if (card.card_type === 'itineraire') {
+          console.log('Processing itineraire data for card:', card.id);
+          const itineraireData = typeof card.itineraireData === 'string'
+            ? card.itineraireData
+            : JSON.stringify(card.itineraire_data);
+        
+          await db.query(
+            'INSERT INTO itineraire_cards (id, card_id, itineraire_data) VALUES (?, ?, ?)',
+            [
+              crypto.randomUUID(),
+              card.id,
+              itineraireData
+            ]
+          );
+        }
       } catch (cardError) {
         console.error('Error processing card:', card.id, cardError);
         throw cardError;
@@ -505,6 +541,7 @@ app.put('/api/sets/:setId', async (req, res) => {
     // Delete existing data
     console.log('Deleting existing data...');
     await db.query('DELETE FROM location_cards WHERE card_id IN (SELECT id FROM cards WHERE set_id = ?)', [setId]);
+    await db.query('DELETE FROM itineraire_cards WHERE card_id IN (SELECT id FROM cards WHERE set_id = ?)', [setId]);
     await db.query('DELETE FROM image_cards WHERE card_id IN (SELECT id FROM cards WHERE set_id = ?)', [setId]);
     await db.query('DELETE FROM cards WHERE set_id = ?', [setId]);
     await db.query('DELETE FROM connections WHERE set_id = ?', [setId]);
@@ -520,7 +557,7 @@ app.put('/api/sets/:setId', async (req, res) => {
         const budgetData = card.budget_data ? 
           (typeof card.budget_data === 'string' ? card.budget_data : JSON.stringify(card.budget_data))
           : null;
-
+        //insert to card table
         await db.query(
           `INSERT INTO cards (
             id, set_id, title, content, position_x, position_y, 
@@ -566,6 +603,23 @@ app.put('/api/sets/:setId', async (req, res) => {
               crypto.randomUUID(),
               card.id,
               locationData
+            ]
+          );
+        }
+        console.log('perso log iti:', card.itineraireData);
+        console.log('perso log iti:', card.itineraire_data);
+        if (card.card_type === 'itineraire' && card.itineraire_data) {
+          console.log('Processing itineraire data for card:', card.id);
+          const itineraireData = typeof card.itineraire_data === 'string'
+            ? card.itineraire_data
+            : JSON.stringify(card.itineraire_data);
+
+          await db.query(
+            'INSERT INTO itineraire_cards (id, card_id, itineraire_data) VALUES (?, ?, ?)',
+            [
+              crypto.randomUUID(),
+              card.id,
+              itineraireData
             ]
           );
         }

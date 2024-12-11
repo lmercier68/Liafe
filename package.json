@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "server": "node --trace-warnings server.js",
-    "dev": "vite --host",
+    "dev": "vite",
+    "devhost": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -15,11 +16,13 @@
     "@dnd-kit/modifiers": "^7.0.0",
     "@dnd-kit/sortable": "^8.0.0",
     "@radix-ui/react-popover": "^1.0.7",
+    "@types/leaflet-routing-machine": "^3.2.8",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.18.3",
     "git-flow": "^0.2.0",
     "leaflet": "^1.9.4",
+    "leaflet-routing-machine": "^3.2.12",
     "lucide-react": "^0.344.0",
     "mysql2": "^3.9.2",
     "react": "^18.3.1",

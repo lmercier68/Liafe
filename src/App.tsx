@@ -13,6 +13,7 @@ import { Card } from './components/Card';
 import { BudgetCard } from './components/BudgetCard';
 import { ImageCard } from './components/ImageCard';
 import { LocationCard } from './components/LocationCard';
+import { ItineraireCard } from './components/ItineraireCard';
 import { Sidebar } from './components/Sidebar';
 import { SplashScreen } from './components/SplashScreen';
 import { ConnectionDialog } from './components/ConnectionDialog';
@@ -283,6 +284,12 @@ function App() {
         incomingConnections={connections.filter(conn => conn.end === card.id)}
         onConnect={() => handleConnect(card.id)}
       />
+    ) : card.cardType === 'itineraire' ? (
+      <ItineraireCard {...card} 
+      isConnecting={connectingFrom === card.id}
+      incomingConnections={connections.filter(conn => conn.end === card.id)}
+      onConnect={() => handleConnect(card.id)}
+    />
     ) : (
       <Card
         {...card}

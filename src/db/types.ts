@@ -19,6 +19,17 @@ export interface LocationData {
   coordinates?: [number, number];
 }
 
+export interface ItineraireData {
+   start: {
+      address: string;
+      coordinates?: [number, number];
+    };
+    end: {
+      address: string;
+      coordinates?: [number, number];
+    };
+};
+
 export interface DbCard {
   id: string;
   set_id: string;
@@ -30,12 +41,13 @@ export interface DbCard {
   is_expanded: number;
   due_date: string | null;
   status: 'todo' | 'in-progress' | 'done' | null;
-  card_type: 'standard' | 'budget' | 'image' | 'contact' | 'location';
+  card_type: 'standard' | 'budget' | 'image' | 'contact' | 'location' | 'itineraire';
   budget_type: string | null;
   budget_data: string | null;
   image_data: string | null;
   mime_type: string | null;
   location_data?: string | null;
+  itineraire_data?:string | null;
 }
 
 export interface DbConnection {
