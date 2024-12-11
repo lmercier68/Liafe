@@ -12,6 +12,7 @@ import Xarrow from 'react-xarrows';
 import { Card } from './components/Card';
 import { BudgetCard } from './components/BudgetCard';
 import { ImageCard } from './components/ImageCard';
+import { LocationCard } from './components/LocationCard';
 import { Sidebar } from './components/Sidebar';
 import { SplashScreen } from './components/SplashScreen';
 import { ConnectionDialog } from './components/ConnectionDialog';
@@ -242,49 +243,56 @@ function App() {
             />
           )}
 
-          {cards.map((card) => (
-            <div
-              key={card.id}
-              style={{
-                position: 'absolute',
-                left: card.position.x,
-                top: card.position.y,
-                transform: 'translate(0, 0)',
-              }}
-            >
-              {card.cardType === 'image' ? (
-                <ImageCard
-                  {...card}
-                  isConnecting={connectingFrom === card.id}
-                  incomingConnections={connections.filter(conn => conn.end === card.id)}
-                  onConnect={() => handleConnect(card.id)}
-                />
-              ) : card.cardType === 'contact' ? (
-                <Card
-                  {...card}
-                  isConnecting={connectingFrom === card.id}
-                  incomingConnections={connections.filter(conn => conn.end === card.id)}
-                  onConnect={() => handleConnect(card.id)}
-                />
-              ) : card.cardType === 'budget' ? (
-                <BudgetCard
-                  {...card}
-                  budgetType={card.budgetType}
-                  budgetData={card.budgetData || { totalAmount: 0, availableAmount: 0, expenses: [] }}
-                  isConnecting={connectingFrom === card.id}
-                  incomingConnections={connections.filter(conn => conn.end === card.id)}
-                  onConnect={() => handleConnect(card.id)}
-                />
-              ) : (
-                <Card
-                  {...card}
-                  isConnecting={connectingFrom === card.id}
-                  incomingConnections={connections.filter(conn => conn.end === card.id)}
-                  onConnect={() => handleConnect(card.id)}
-                />
-              )}
-            </div>
-          ))}
+{cards.map((card) => (
+  <div
+    key={card.id}
+    style={{
+      position: 'absolute',
+      left: card.position.x,
+      top: card.position.y,
+      transform: 'translate(0, 0)',
+    }}
+  >
+    {card.cardType === 'image' ? (
+      <ImageCard
+        {...card}
+        isConnecting={connectingFrom === card.id}
+        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        onConnect={() => handleConnect(card.id)}
+      />
+    ) : card.cardType === 'contact' ? (
+      <Card
+        {...card}
+        isConnecting={connectingFrom === card.id}
+        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        onConnect={() => handleConnect(card.id)}
+      />
+    ) : card.cardType === 'budget' ? (
+      <BudgetCard
+        {...card}
+        budgetType={card.budgetType}
+        budgetData={card.budgetData || { totalAmount: 0, availableAmount: 0, expenses: [] }}
+        isConnecting={connectingFrom === card.id}
+        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        onConnect={() => handleConnect(card.id)}
+      />
+    ) : card.cardType === 'location' ? (
+      <LocationCard
+        {...card}
+        isConnecting={connectingFrom === card.id}
+        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        onConnect={() => handleConnect(card.id)}
+      />
+    ) : (
+      <Card
+        {...card}
+        isConnecting={connectingFrom === card.id}
+        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        onConnect={() => handleConnect(card.id)}
+      />
+    )}
+  </div>
+))}
           {connections.map((connection) => {
             const startCard = cards.find(c => c.id === connection.start);
             const endCard = cards.find(c => c.id === connection.end);
