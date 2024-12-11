@@ -94,6 +94,10 @@ export function ItineraireCard({
   const [localItineraireData, setLocalItineraireData] = useState<ItineraireData>(
     itineraireData || { start: { address: '' }, end: { address: '' } }
   );
+  const [geocodedCoordinates, setGeocodedCoordinates] = useState<{
+    start?: [number, number];
+    end?: [number, number];
+  }>({});
 
   const updateCard = useCardStore((state) => state.updateCard);
   const deleteCard = useCardStore((state) => state.deleteCard);
@@ -103,7 +107,12 @@ export function ItineraireCard({
   const handleSave = async () => {
     const startCoords = await geocodeAddress(localItineraireData.start.address);
     const endCoords = await geocodeAddress(localItineraireData.end.address);
-    
+
+    setGeocodedCoordinates({
+      start: startCoords || undefined,
+      end: endCoords || undefined
+    });
+
     const updatedItineraireData = {
       start: {
         ...localItineraireData.start,
@@ -114,12 +123,12 @@ export function ItineraireCard({
         coordinates: endCoords || undefined
       }
     };
-    
+
     updateCard(id, {
       title: localTitle,
       itineraireData: updatedItineraireData
     });
-    
+
     setIsEditing(false);
   };
 
@@ -129,9 +138,9 @@ export function ItineraireCard({
     cursor: isDragging ? 'grabbing' : 'grab'
   } : undefined;
 
-  const hasValidCoordinates = 
-    localItineraireData?.start?.coordinates && 
-    localItineraireData?.end?.coordinates;
+  const hasValidCoordinates =
+    geocodedCoordinates.start &&
+    geocodedCoordinates.end;
 
   return (
     <div
@@ -241,11 +250,11 @@ export function ItineraireCard({
                   {localItineraireData.end.address}
                 </div>
               </div>
-              
+
               {isExpanded && hasValidCoordinates && (
                 <div className="flex-1 rounded-lg overflow-hidden border mt-2">
                   <MapContainer
-                    center={localItineraireData.start.coordinates}
+                    center={geocodedCoordinates.start}
                     zoom={13}
                     style={{ height: '100%', width: '100%' }}
                   >
@@ -253,10 +262,12 @@ export function ItineraireCard({
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
-                    <RoutingMachine
-                      start={localItineraireData.start.coordinates}
-                      end={localItineraireData.end.coordinates}
-                    />
+                    {geocodedCoordinates.start && geocodedCoordinates.end && (
+                      <RoutingMachine
+                        start={geocodedCoordinates.start}
+                        end={geocodedCoordinates.end}
+                      />
+                    )}
                   </MapContainer>
                 </div>
               )}

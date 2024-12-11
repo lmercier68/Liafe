@@ -439,9 +439,7 @@ app.post('/api/sets', async (req, res) => {
             ]
           );
         }
-     
-       
-        console.log('perso log iti:', card.itineraireData);
+
         if (card.card_type === 'itineraire') {
           console.log('Processing itineraire data for card:', card.id);
           const itineraireData = typeof card.itineraireData === 'string'
@@ -606,8 +604,7 @@ app.put('/api/sets/:setId', async (req, res) => {
             ]
           );
         }
-        console.log('perso log iti:', card.itineraireData);
-        console.log('perso log iti:', card.itineraire_data);
+
         if (card.card_type === 'itineraire' && card.itineraire_data) {
           console.log('Processing itineraire data for card:', card.id);
           const itineraireData = typeof card.itineraire_data === 'string'
