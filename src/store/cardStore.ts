@@ -534,10 +534,16 @@ export const useCardStore = create<CardState>()((set, get) => ({
         }))
       };
   
-      console.log('Sending payload to server:', payload);
+      // Utiliser PUT si nous avons un currentSetId, sinon utiliser POST
+      const method = currentSetId ? 'PUT' : 'POST';
+      const url = currentSetId 
+        ? `http://localhost:3000/api/sets/${currentSetId}`
+        : 'http://localhost:3000/api/sets';
   
-      const response = await fetch('http://localhost:3000/api/sets', {
-        method: 'POST',
+      console.log(`Sending ${method} request to ${url}`);
+  
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json'
         },

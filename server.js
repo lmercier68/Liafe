@@ -492,70 +492,93 @@ app.put('/api/sets/:setId', async (req, res) => {
   const setId = req.params.setId;
 
   try {
+    console.log('Starting update transaction for set:', setId);
     await db.query('START TRANSACTION');
 
-    // Update existing set
+    // Update existing set name
+    console.log('Updating set name:', name);
     await db.query(
       'UPDATE card_sets SET name = ? WHERE id = ?',
       [name, setId]
     );
 
     // Delete existing data
+    console.log('Deleting existing data...');
+    await db.query('DELETE FROM location_cards WHERE card_id IN (SELECT id FROM cards WHERE set_id = ?)', [setId]);
+    await db.query('DELETE FROM image_cards WHERE card_id IN (SELECT id FROM cards WHERE set_id = ?)', [setId]);
     await db.query('DELETE FROM cards WHERE set_id = ?', [setId]);
     await db.query('DELETE FROM connections WHERE set_id = ?', [setId]);
-    await db.query('DELETE FROM image_cards WHERE card_id IN (SELECT id FROM cards WHERE set_id = ?)', [setId]);
-    await db.query('DELETE FROM location_cards WHERE card_id IN (SELECT id FROM cards WHERE set_id = ?)', [setId]);
     await db.query('DELETE FROM groups_table WHERE set_id = ?', [setId]);
     await db.query('DELETE FROM group_connections WHERE set_id = ?', [setId]);
 
-    // Insert new cards and related data
+    // Insert new data
+    console.log('Inserting updated cards...');
     for (const card of cards) {
-      const budgetData = card.budget_data ? 
-        (typeof card.budget_data === 'string' ? card.budget_data : JSON.stringify(card.budget_data))
-        : null;
+      try {
+        console.log('Processing card:', { id: card.id, type: card.card_type });
+        
+        const budgetData = card.budget_data ? 
+          (typeof card.budget_data === 'string' ? card.budget_data : JSON.stringify(card.budget_data))
+          : null;
 
-      await db.query(
-        'INSERT INTO cards (id, set_id, title, content, position_x, position_y, color, is_expanded, budget_type, budget_data, card_type, location_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [
-          card.id,
-          setId,
-          card.title,
-          card.content,
-          card.position_x,
-          card.position_y,
-          card.color,
-          card.is_expanded,
-          card.budget_type,
-          budgetData,
-          card.card_type,
-          card.location_data
-        ]
-      );
-
-      if (card.card_type === 'image' && card.image_data) {
         await db.query(
-          'INSERT INTO image_cards (id, card_id, image_data, mime_type) VALUES (?, ?, ?, ?)',
-          [crypto.randomUUID(), card.id, Buffer.from(card.image_data, 'base64'), card.mime_type]
-        );
-      }
-
-      if (card.card_type === 'location' && card.location_data) {
-        const locationData = typeof card.location_data === 'string'
-          ? JSON.parse(card.location_data)
-          : card.location_data;
-      
-        await db.query(
-          'INSERT INTO location_cards (id, card_id, location_data) VALUES (?, ?, ?)',
+          `INSERT INTO cards (
+            id, set_id, title, content, position_x, position_y, 
+            color, is_expanded, budget_type, budget_data, card_type
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
-            crypto.randomUUID(),
             card.id,
-            JSON.stringify(locationData)
+            setId,
+            card.title,
+            card.content,
+            card.position_x,
+            card.position_y,
+            card.color,
+            card.is_expanded,
+            card.budget_type || null,
+            budgetData,
+            card.card_type || 'standard'
           ]
         );
+
+        if (card.card_type === 'image' && card.image_data) {
+          console.log('Processing image data for card:', card.id);
+          await db.query(
+            'INSERT INTO image_cards (id, card_id, image_data, mime_type) VALUES (?, ?, ?, ?)',
+            [
+              crypto.randomUUID(),
+              card.id,
+              Buffer.from(card.image_data, 'base64'),
+              card.mime_type
+            ]
+          );
+        }
+
+        if (card.card_type === 'location' && card.location_data) {
+          console.log('Processing location data for card:', card.id);
+          const locationData = typeof card.location_data === 'string'
+            ? card.location_data
+            : JSON.stringify(card.location_data);
+
+          await db.query(
+            'INSERT INTO location_cards (id, card_id, location_data) VALUES (?, ?, ?)',
+            [
+              crypto.randomUUID(),
+              card.id,
+              locationData
+            ]
+          );
+        }
+      } catch (cardError) {
+        console.error('Error processing card:', card.id, cardError);
+        throw cardError;
       }
     }
 
-    // Insert new connections
+   
+
+    // Insert other data...
+    console.log('Processing connections...');
     for (const conn of connections) {
       await db.query(
         'INSERT INTO connections (start_id, end_id, set_id, style, color) VALUES (?, ?, ?, ?, ?)',
@@ -563,10 +586,13 @@ app.put('/api/sets/:setId', async (req, res) => {
       );
     }
 
-    // Insert new groups
+    console.log('Processing groups...');
     for (const group of groups) {
       await db.query(
-        'INSERT INTO groups_table (id, set_id, name, bounds_x, bounds_y, bounds_width, bounds_height, is_minimized, original_width, original_height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        `INSERT INTO groups_table (
+          id, set_id, name, bounds_x, bounds_y, bounds_width, bounds_height, 
+          is_minimized, original_width, original_height
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           group.id,
           setId,
@@ -582,7 +608,7 @@ app.put('/api/sets/:setId', async (req, res) => {
       );
     }
 
-    // Insert new group connections
+    console.log('Processing group connections...');
     for (const conn of groupConnections) {
       await db.query(
         'INSERT INTO group_connections (start_id, end_id, set_id, style, color) VALUES (?, ?, ?, ?, ?)',
@@ -590,13 +616,27 @@ app.put('/api/sets/:setId', async (req, res) => {
       );
     }
 
+    console.log('Committing transaction...');
     await db.query('COMMIT');
+    console.log('Update completed successfully');
     res.json({ success: true, setId });
   } catch (error) {
-    await db.query('ROLLBACK');
-    res.status(500).json({ error: error.message });
+    console.error('Error updating set:', error);
+    try {
+      console.log('Rolling back transaction...');
+      await db.query('ROLLBACK');
+      console.log('Rollback successful');
+    } catch (rollbackError) {
+      console.error('Rollback failed:', rollbackError);
+    }
+    res.status(500).json({ 
+      error: error.message,
+      details: error.stack,
+      code: error.code 
+    });
   }
 });
+
 
 const port = 3000;
 
