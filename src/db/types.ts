@@ -51,7 +51,7 @@ export interface DbCard {
   is_expanded: number;
   due_date: string | null;
   status: 'todo' | 'in-progress' | 'done' | null;
-  card_type: 'standard' | 'budget' | 'image' | 'contact' | 'location' | 'itineraire';
+  card_type: 'standard' | 'budget' | 'image' | 'contact' | 'location' | 'itineraire' | 'note' | 'checklist';
   budget_type: string | null;
   budget_data: string | null;
   image_data: string | null;

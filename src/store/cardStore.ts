@@ -12,7 +12,7 @@ export interface Card {
   isExpanded: boolean;
   dueDate: string | null;
   status: 'todo' | 'in-progress' | 'done' | null;
-  cardType?: 'standard' | 'budget' | 'image' | 'contact' | 'location' | 'itineraire';
+  cardType?: 'standard' | 'budget' | 'image' | 'contact' | 'location' | 'itineraire' | 'note' | 'checklist';
   budgetType?: 'total-available' | 'expenses-tracking';
   budgetData?: {
     totalAmount?: number;
@@ -23,7 +23,7 @@ export interface Card {
       date: string;
     }>;
   };
-    itineraireData?: ItineraireData;
+  itineraireData?: ItineraireData;
   
   locationData?: LocationData;
   imageData?: string;

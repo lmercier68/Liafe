@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Save, FolderOpen, FileText, Users, Group, Wallet, Settings, Image, MapPin, Map, Navigation } from 'lucide-react';
+import { Plus, Save, FolderOpen, FileText, Users, Group, Wallet, Settings, Image, MapPin, Map, Navigation, FilePen, NotepadText, ListTodo } from 'lucide-react';
 import { useCardStore } from '../store/cardStore';
 import { DocumentDialog } from './DocumentDialog';
 import { SaveDialog } from './SaveDialog';
@@ -24,6 +24,7 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
   const [showBudgetTypeDialog, setShowBudgetTypeDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showLocationMenu, setShowLocationMenu] = useState(false);
+  const [showNotesMenu, setShowNotesMenu] = useState(false);
   const [sets, setSets] = useState<Array<{ id: string; name: string; created_at: number; }>>([]);
 
   const handleAddDocument = async (displayName: string, filePath: string, comment: string) => {
@@ -187,7 +188,43 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
     });
     setShowLocationMenu(false);
   };
+  const handleAddNoteCard = () => {
+    const id = crypto.randomUUID();
+    addCard({
+      id,
+      title: t('cards.noteCard'),
+      content: '',
+      position: {
+        x: Math.random() * (window.innerWidth - 400) + 200,
+        y: Math.random() * (window.innerHeight - 300) + 100,
+      },
+      color: 'white',
+      cardType: 'note',
+      isExpanded: true,
+      dueDate: null,
+      status: null,
+    });
+    setShowNotesMenu(false);
+  };
 
+  const handleAddChecklistCard = () => {
+    const id = crypto.randomUUID();
+    addCard({
+      id,
+      title: t('cards.checklistCard'),
+      content: '',
+      position: {
+        x: Math.random() * (window.innerWidth - 400) + 200,
+        y: Math.random() * (window.innerHeight - 300) + 100,
+      },
+      color: 'white',
+      cardType: 'checklist',
+      isExpanded: true,
+      dueDate: null,
+      status: null,
+    });
+    setShowNotesMenu(false);
+  };
   const handleSave = async (name: string) => {
     try {
       console.log('Sidebar: handleSave called with name:', name);
@@ -261,6 +298,39 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
           </span>
         </button>
         <button
+          className="w-12 h-12 rounded-lg flex items-center justify-center text-white transition-colors duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative group"
+          onClick={() => setShowNotesMenu(!showNotesMenu)}
+          disabled={disabled}
+          style={{ backgroundColor: '#E615D7'}}
+        >
+          <FilePen size={24} />
+          <span className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">
+            {t('sidebar.notes')}
+          </span>
+        </button>
+        {showNotesMenu && (
+          <div className="fixed left-14 ml-2 bg-gray-900 rounded-lg shadow-xl p-2 flex gap-2 items-center" style={{ top: `${3* 4 + 1}rem` }}>
+            <button
+              className="p-2 hover:bg-gray-800 rounded-lg group relative flex items-center justify-center"
+              onClick={handleAddNoteCard}
+            >
+              <NotepadText size={24} className="text-white" />
+              <span className="absolute top-full mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">
+                {t('sidebar.noteCard')}
+              </span>
+            </button>
+            <button
+              className="p-2 hover:bg-gray-800 rounded-lg group relative flex items-center justify-center"
+              onClick={handleAddChecklistCard}
+            >
+              <ListTodo size={24} className="text-white" />
+              <span className="absolute top-full mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 whitespace-nowrap">
+                {t('sidebar.checklistCard')}
+              </span>
+            </button>
+          </div>
+        )}
+        <button
                   className="w-12 h-12 bg-rose-600 rounded-lg flex items-center justify-center text-white hover:bg-rose-700 transition-colors duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative group"
           onClick={() => setShowContactDialog(true)}
           disabled={disabled}
@@ -293,7 +363,7 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
           </span>
         </button>
         {showLocationMenu && (
-          <div className="fixed left-14 ml-2 bg-gray-900 rounded-lg shadow-xl p-2 flex gap-2 items-center" style={{ top: `${5 * 4 + 1}rem` }}>
+          <div className="fixed left-14 ml-2 bg-gray-900 rounded-lg shadow-xl p-2 flex gap-2 items-center" style={{ top: `${6 * 4 + 1}rem` }}>
             <button
               className="p-2 hover:bg-gray-800 rounded-lg group relative flex items-center justify-center"
               onClick={handleAddLocationCard}

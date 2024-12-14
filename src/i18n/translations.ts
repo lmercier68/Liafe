@@ -28,7 +28,9 @@ export const translations = {
         todo: 'À faire',
         inProgress: 'En cours',
         done: 'Terminé'
-      }
+      },
+      noteCard: 'Nouvelle note',
+      checklistCard: 'Nouvelle liste'
     },
     sidebar: {
       addCard: 'Ajouter une nouvelle carte',
@@ -54,7 +56,10 @@ export const translations = {
           title: 'Suivi des dépenses',
           description: 'Suivre les dépenses par rapport au budget initial'
         }
-      }
+      },
+      notes: 'Notes et listes',
+      noteCard: 'Note',
+      checklistCard: 'Liste de tâches'
     },
     budget: {
       devise:'€',
@@ -182,7 +187,9 @@ export const translations = {
         todo: 'To do',
         inProgress: 'In progress',
         done: 'Done'
-      }
+      },
+      noteCard: 'New note',
+      checklistCard: 'New checklist'
     },
     sidebar: {
       addCard: 'Add new card',
@@ -208,7 +215,10 @@ export const translations = {
           title: 'Expense Tracker',
           description: 'Track expenses against initial budget'
         }
-      }
+      },
+      notes: 'Notes and lists',
+      noteCard: 'Note',
+      checklistCard: 'Checklist'
     },
     budget: {
       devise:'$',
@@ -336,7 +346,9 @@ export const translations = {
         todo: 'Por hacer',
         inProgress: 'En progreso',
         done: 'Terminado'
-      }
+      },
+      noteCard: 'Nueva nota',
+      checklistCard: 'Nueva lista'
     },
     sidebar: {
       addCard: 'Añadir nueva tarjeta',
@@ -362,7 +374,10 @@ export const translations = {
           title: 'Seguimiento de gastos',
           description: 'Seguimiento de gastos contra presupuesto inicial'
         }
-      }
+      },
+      notes: 'Notas y listas',
+      noteCard: 'Nota',
+      checklistCard: 'Lista de tareas'
     },
     budget: {
       devise:'€',
