@@ -6,6 +6,7 @@ import { ColorPicker } from './ColorPicker';
 import { useI18n } from '../i18n/useTranslation';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { geocodeAddress } from '../utils/geocoding';
+import { verifyExistingTiles } from '../db';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import L from 'leaflet';
@@ -30,39 +31,136 @@ interface ItineraireData {
   };
 }
 
-function RoutingMachine({ start, end }: { start: [number, number]; end: [number, number] }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!map || !start || !end) return;
-
-    const control = L.Routing.control({
-      waypoints: [
-        L.latLng(start[0], start[1]),
-        L.latLng(end[0], end[1])
-      ],
-      router: L.Routing.osrmv1({
-        serviceUrl: 'https://router.project-osrm.org/route/v1'
-      }),
-      lineOptions: {
-        styles: [{ color: '#6366f1', weight: 4 }],
-        extendToWaypoints: true,
-        missingRouteTolerance: 0
-      },
-      show: false,
-      addWaypoints: false,
-      routeWhileDragging: false,
-      fitSelectedRoutes: true,
-      showAlternatives: false
-    }).addTo(map);
-
-    return () => {
-      map.removeControl(control);
-    };
-  }, [map, start, end]);
-
-  return null;
+function latLngToTile(lat : number, lng : number, zoom :number) {
+    const scale = Math.pow(2, zoom);
+    const x = Math.floor((lng + 180) / 360 * scale);
+    const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * scale);
+    console.log('tile:',{ x, y });
+    return { x, y };
 }
+interface Tile {
+    x: number;
+    y: number;
+  }
+
+  function RoutingMachine({ start, end }: { start: [number, number]; end: [number, number] }) {
+    const map = useMap();
+  
+    useEffect(() => {
+      if (!map || !start || !end) return;
+  
+      // Crée les limites pour centrer la carte
+      const bounds = L.latLngBounds([
+        L.latLng(start[0], start[1]),
+        L.latLng(end[0], end[1]),
+      ]);
+  
+      // Ajuste la vue de la carte aux limites
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+  
+      const control = L.Routing.control({
+        waypoints: [
+          L.latLng(start[0], start[1]),
+          L.latLng(end[0], end[1]),
+        ],
+        router: L.Routing.osrmv1({
+          serviceUrl: 'https://router.project-osrm.org/route/v1',
+        }),
+        lineOptions: {
+          styles: [{ color: '#6366f1', weight: 4 }],
+          extendToWaypoints: true,
+          missingRouteTolerance: 0,
+        },
+        show: false,
+        addWaypoints: false,
+        routeWhileDragging: false,
+        fitSelectedRoutes: true,
+        showAlternatives: false,
+      }).addTo(map);
+  
+      // Listen for routes to be calculated
+      control.on('routesfound', function (e) {
+        const polylineCoordinates = e.routes[0].coordinates; // Get polyline coordinates
+        const bounds = L.latLngBounds(polylineCoordinates); // Calculate bounds
+        const northEast = bounds.getNorthEast(); // Upper-right corner
+        const southWest = bounds.getSouthWest(); // Lower-left corner
+  
+        console.log('Bounds:', {
+          northEast: { lat: northEast.lat, lng: northEast.lng },
+          southWest: { lat: southWest.lat, lng: southWest.lng },
+        });
+  
+        const zoom = map.getZoom(); // Get the current zoom level
+        console.log('Niveau de zoom calculé :', zoom);
+  // Appliquer manuellement le zoom si nécessaire
+        map.setZoom(zoom);
+        const northEastTile = latLngToTile(northEast.lat, northEast.lng, zoom);
+        const southWestTile = latLngToTile(southWest.lat, southWest.lng, zoom);
+  
+        console.log('NorthEast Tile:', northEastTile);
+        console.log('SouthWest Tile:', southWestTile);
+  
+        // Calculate all tiles within the bounding box
+        const tiles = [];
+        const minX = Math.min(southWestTile.x, northEastTile.x);
+        const maxX = Math.max(southWestTile.x, northEastTile.x);
+        const minY = Math.min(southWestTile.y, northEastTile.y);
+        const maxY = Math.max(southWestTile.y, northEastTile.y);
+  
+        for (let x = minX; x <= maxX; x++) {
+          for (let y = minY; y <= maxY; y++) {
+            tiles.push({ x, y });
+          }
+        }
+  
+        console.log('All Tiles:', tiles);
+        tilesManager(tiles, zoom);
+      });
+  
+      return () => {
+        map.removeControl(control);
+      };
+    }, [map, start, end]);
+  
+    return null;
+  }
+  
+async function tilesManager(tiles: Tile[], zoom: number) {
+    try {
+      // Vérifier les tuiles existantes et obtenir les URLs des images
+      const data = await verifyExistingTiles(zoom, tiles);
+      console.log('Verified tiles response data:', data);
+  
+      // Télécharger les images
+      const imageUrls = data.tiles.map(tile => tile.path);
+      await downloadImages(imageUrls);
+  
+      console.log('Images downloaded successfully');
+    } catch (error) {
+      console.error('Error in tilesManager:', error);
+    }
+  }
+  
+  async function downloadImages(imageUrls: string[]) {
+    const downloadPromises = imageUrls.map(url =>
+      fetch(url).then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to download image: ${url}`);
+        }
+        return response.blob();
+      }).then(blob => {
+        const imageUrl = URL.createObjectURL(blob);
+        console.log('Downloaded image:', imageUrl);
+        // Vous pouvez afficher l'image ou l'utiliser comme vous le souhaitez
+        // Par exemple, vous pouvez créer une balise img et l'ajouter au DOM
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        document.body.appendChild(img);
+      })
+    );
+  
+    await Promise.all(downloadPromises);
+  }
 
 interface ItineraireCardProps {
   id: string;
@@ -150,7 +248,7 @@ export function ItineraireCard({
       {...listeners}
       className={`absolute transition-all duration-200 border ${
         CARD_COLORS[color as keyof typeof CARD_COLORS]
-      } ${isExpanded ? 'w-96 h-80' : 'w-96 h-24'} ${
+      } ${isExpanded ? 'w-[768px] h-[640px]' : 'w-96 h-24'} ${
         isConnecting ? 'ring-2 ring-indigo-500' : ''
       } rounded-lg shadow-lg`}
       id={id}
@@ -256,10 +354,13 @@ export function ItineraireCard({
                   <MapContainer
                     center={geocodedCoordinates.start}
                     zoom={13}
+                    
                     style={{ height: '100%', width: '100%' }}
+                    zoomControl={false}
                   >
                     <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      url="http://localhost:5174/tiles/{z}/{x}/{y}.png"
+                    
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
                     {geocodedCoordinates.start && geocodedCoordinates.end && (

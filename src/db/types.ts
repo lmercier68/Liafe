@@ -18,7 +18,17 @@ export interface LocationData {
   country?: string;
   coordinates?: [number, number];
 }
-
+export interface Tile {
+  x: number;
+  y: number;
+}
+export interface TileResponse {
+  tiles: {
+    x: number;
+    y: number;
+    path: string;
+  }[];
+}
 export interface ItineraireData {
    start: {
       address: string;

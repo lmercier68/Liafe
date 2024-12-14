@@ -1,4 +1,6 @@
-import type { DbCard, DbConnection, DbCardSet } from './types';
+import type { DbCard, DbConnection, DbCardSet, DbGroup, Tile, TileResponse } from './types';
+
+
 
 const API_URL = 'http://localhost:3000/api';
 
@@ -87,5 +89,27 @@ export async function saveSet(
   } catch (error) {
     console.error('Failed to save set:', error);
     throw new Error('Failed to save card set to database');
+  }
+}
+export async function verifyExistingTiles(zoom: number, tiles: Tile[]): Promise<TileResponse> {
+  try {
+    const method = 'POST';
+    const endpoint = `${API_URL}/verifyTiles`;
+    const response = await fetch(endpoint, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        zoom,
+        tiles
+      }),
+    });
+    const data = await response.json();
+    console.log('Data in verifyTiles (index.ts)', data);
+    return data;
+  } catch (error) {
+    console.error('Failed to verify existing tiles:', error);
+    throw new Error('Failed to verify existing tiles');
   }
 }
