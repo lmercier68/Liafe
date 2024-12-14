@@ -2,9 +2,16 @@ import express from 'express';
 import mysql from 'mysql2/promise';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 let db = null;
 let dbConfig = null;
+
+//adresse definissant le path en Db pour les fichier images de tile des map
+const SERVER_ADDRESS = process.env.SERVER_ADDRESS || 'http://localhost:5174';
+
 
 async function loadDbConfig() {
   try {
@@ -162,6 +169,15 @@ await db.query(`
     )
   `);
 
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS itineraire_cards (
+      id VARCHAR(36) PRIMARY KEY,
+      card_id VARCHAR(36) NOT NULL,
+      itineraire_data JSON NOT NULL,
+      FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE
+    )
+  `);
+
 await db.query(`
   CREATE TABLE IF NOT EXISTS group_connections (
     start_id VARCHAR(36) NOT NULL,
@@ -173,7 +189,14 @@ await db.query(`
     FOREIGN KEY (set_id) REFERENCES card_sets(id) ON DELETE CASCADE
   )
   `);
-
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS map_tiles (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      zoom INT NOT NULL,
+      bounds_x INT NOT NULL,
+      bounds_y INT NOT NULL,
+      image_path VARCHAR(50)
+    )`);
 await db.query(`
   CREATE TABLE IF NOT EXISTS groups_table (
     id VARCHAR(36) PRIMARY KEY,
@@ -319,6 +342,15 @@ app.get('/api/sets/:setId', async (req, res) => {
           card.location_data = locationData[0].location_data;
         }
       }
+      if (card.card_type === 'itineraire') {
+        const [itineraireData] = await db.query(
+          'SELECT itineraire_data FROM itineraire_cards WHERE card_id = ?',
+          [card.id]
+        );
+        if (itineraireData.length > 0) {
+          card.itineraire_data = itineraireData[0].itineraire_data;
+        }
+      }
     }
     
     const [connections] = await db.query('SELECT * FROM connections WHERE set_id = ?', [req.params.setId]);
@@ -421,6 +453,22 @@ app.post('/api/sets', async (req, res) => {
             ]
           );
         }
+
+        if (card.card_type === 'itineraire') {
+          console.log('Processing itineraire data for card:', card.id);
+          const itineraireData = typeof card.itineraireData === 'string'
+            ? card.itineraireData
+            : JSON.stringify(card.itineraire_data);
+        
+          await db.query(
+            'INSERT INTO itineraire_cards (id, card_id, itineraire_data) VALUES (?, ?, ?)',
+            [
+              crypto.randomUUID(),
+              card.id,
+              itineraireData
+            ]
+          );
+        }
       } catch (cardError) {
         console.error('Error processing card:', card.id, cardError);
         throw cardError;
@@ -505,6 +553,7 @@ app.put('/api/sets/:setId', async (req, res) => {
     // Delete existing data
     console.log('Deleting existing data...');
     await db.query('DELETE FROM location_cards WHERE card_id IN (SELECT id FROM cards WHERE set_id = ?)', [setId]);
+    await db.query('DELETE FROM itineraire_cards WHERE card_id IN (SELECT id FROM cards WHERE set_id = ?)', [setId]);
     await db.query('DELETE FROM image_cards WHERE card_id IN (SELECT id FROM cards WHERE set_id = ?)', [setId]);
     await db.query('DELETE FROM cards WHERE set_id = ?', [setId]);
     await db.query('DELETE FROM connections WHERE set_id = ?', [setId]);
@@ -520,7 +569,7 @@ app.put('/api/sets/:setId', async (req, res) => {
         const budgetData = card.budget_data ? 
           (typeof card.budget_data === 'string' ? card.budget_data : JSON.stringify(card.budget_data))
           : null;
-
+        //insert to card table
         await db.query(
           `INSERT INTO cards (
             id, set_id, title, content, position_x, position_y, 
@@ -566,6 +615,22 @@ app.put('/api/sets/:setId', async (req, res) => {
               crypto.randomUUID(),
               card.id,
               locationData
+            ]
+          );
+        }
+
+        if (card.card_type === 'itineraire' && card.itineraire_data) {
+          console.log('Processing itineraire data for card:', card.id);
+          const itineraireData = typeof card.itineraire_data === 'string'
+            ? card.itineraire_data
+            : JSON.stringify(card.itineraire_data);
+
+          await db.query(
+            'INSERT INTO itineraire_cards (id, card_id, itineraire_data) VALUES (?, ?, ?)',
+            [
+              crypto.randomUUID(),
+              card.id,
+              itineraireData
             ]
           );
         }
@@ -637,6 +702,111 @@ app.put('/api/sets/:setId', async (req, res) => {
   }
 });
 
+app.post('/api/verifyTiles', async (req, res) => {
+  const { zoom, tiles } = req.body;
+
+  if (!zoom || !Array.isArray(tiles)) {
+    return res.status(400).json({ error: 'Invalid input' });
+  }
+
+  try {
+    // Construire la requête SQL pour vérifier les tuiles présentes et récupérer les chemins
+    const placeholders = tiles.map(() => '(?, ?)').join(', ');
+    const values = tiles.flatMap(tile => [tile.x, tile.y]);
+
+    console.log('placeholders: ', placeholders);
+    console.log('values: ', values);
+
+    const query = `
+      SELECT bounds_x, bounds_y, image_path
+      FROM map_tiles
+      WHERE (bounds_x, bounds_y) IN (${placeholders})
+      AND zoom = ?
+    `;
+
+    const result = await db.query(query, [...values, zoom]);
+
+    // Vérifiez que la réponse est correctement structurée
+    if (!result || !result[0]) {
+      console.error('Unexpected database response:', result);
+      return res.status(500).json({ error: 'Unexpected database response' });
+    }
+
+    // Extraire les tuiles présentes de la réponse
+    const existingTiles = result[0].map(row => ({ x: row.bounds_x, y: row.bounds_y, path: row.image_path }));
+
+    // Trouver les tuiles manquantes
+    const missingTiles = tiles.filter(tile => !existingTiles.some(existingTile => existingTile.x === tile.x && existingTile.y === tile.y));
+
+    // Télécharger les tuiles manquantes
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const savePath = path.join(__dirname, 'public', 'tiles');
+    const downloadPromises = missingTiles.map(tile =>
+      downloadTile(zoom, tile.x, tile.y, savePath)
+    );
+
+    await Promise.all(downloadPromises);
+
+    // Ajouter les nouvelles tuiles à la base de données
+    const insertPromises = missingTiles.map(tile =>
+      db.query(
+        'INSERT INTO map_tiles ( zoom, bounds_x, bounds_y, image_path) VALUES (?, ?, ?, ?)',
+        [
+          
+          zoom,
+          tile.x,
+          tile.y,
+          `${SERVER_ADDRESS}/tiles/${zoom}/${tile.x}/${tile.y}.png`
+        ]
+      )
+    );
+
+    await Promise.all(insertPromises);
+
+    // Retourner les chemins de toutes les tuiles
+    const allTiles = [...existingTiles, ...missingTiles.map(tile => ({ x: tile.x, y: tile.y, path: `${SERVER_ADDRESS}/tiles/${zoom}/${tile.x}/${tile.y}.png` }))];
+    res.json({ tiles: allTiles });
+  } catch (error) {
+    console.error('Error verifying and downloading tiles:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+function downloadTile(z, x, y, savePath) {
+  const url = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+  const filePath = path.join(savePath, `${z}`, `${x}`, `${y}.png`);
+
+  return new Promise((resolve, reject) => {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    const req = https.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'image/png',
+        'Connection': 'keep-alive'
+      },
+      agent: new https.Agent({ keepAlive: true })
+    }, (res) => {
+      if (res.statusCode === 200) {
+        const fileStream = fs.createWriteStream(filePath);
+        res.pipe(fileStream);
+        fileStream.on('finish', () => {
+          resolve();
+        });
+        fileStream.on('error', (err) => {
+          console.error(`Error writing file for tile ${z}/${x}/${y}:`, err);
+          reject(err);
+        });
+      } else {
+        console.error(`Failed to download tile: ${url}, status code: ${res.statusCode}`);
+        reject(new Error(`Failed to download tile: ${url}, status code: ${res.statusCode}`));
+      }
+    });
+    req.on('error', (err) => {
+      console.error(`Error downloading tile ${z}/${x}/${y}:`, err);
+      reject(err);
+    });
+  });
+}
 
 const port = 3000;
 

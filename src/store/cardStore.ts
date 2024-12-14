@@ -12,7 +12,7 @@ export interface Card {
   isExpanded: boolean;
   dueDate: string | null;
   status: 'todo' | 'in-progress' | 'done' | null;
-  cardType?: 'standard' | 'budget' | 'image' | 'contact' | 'location';
+  cardType?: 'standard' | 'budget' | 'image' | 'contact' | 'location' | 'itineraire';
   budgetType?: 'total-available' | 'expenses-tracking';
   budgetData?: {
     totalAmount?: number;
@@ -23,11 +23,24 @@ export interface Card {
       date: string;
     }>;
   };
+    itineraireData?: ItineraireData;
+  
   locationData?: LocationData;
   imageData?: string;
   mimeType?: string;
   groupId?: string | null;
 }
+
+interface ItineraireData {
+  start: {
+    address: string;
+    coordinates?: [number, number];
+  };
+  end: {
+    address: string;
+    coordinates?: [number, number];
+  };
+};
 
 interface LocationData {
   streetNumber?: string;
@@ -37,6 +50,8 @@ interface LocationData {
   country?: string;
   coordinates?: [number, number];
 }
+
+
 
 export interface Connection {
   start: string;
@@ -149,7 +164,12 @@ function toDbCard(card: Card): DbCard {
   if (card.cardType === 'location' && card.locationData) {
     locationData = JSON.stringify(card.locationData);
   }
-
+  console.log('cardType: ',card.cardType);
+  let itineraireData = null;
+  if (card.cardType === 'itineraire' && card.itineraireData) {
+    itineraireData = JSON.stringify(card.itineraireData);
+    console.log('card type = itineraire');
+  }
   return {
     id: card.id,
     set_id: '', // This will be set by the saveSet function
@@ -166,8 +186,8 @@ function toDbCard(card: Card): DbCard {
     image_data: imageData,
     mime_type: card.mimeType || null,
     location_data: locationData,
-    card_type: card.cardType || 'standard'
-  
+    card_type: card.cardType || 'standard',
+    itineraire_data: itineraireData,
   };
 }
 
@@ -210,6 +230,18 @@ function fromDbCard(dbCard: DbCard): Card {
     locationData = undefined;
   }
 
+  let itineraireData;
+  try {
+    if (dbCard.card_type === 'itineraire' && dbCard.itineraire_data) {
+      itineraireData = typeof dbCard.itineraire_data === 'object'
+        ? dbCard.itineraire_data
+        : JSON.parse(dbCard.itineraire_data);
+    }
+  } catch (error) {
+    console.error('Failed to parse itineraire data:', error);
+    itineraireData = undefined;
+  }
+
   return {
     id: dbCard.id,
     title: dbCard.title,
@@ -227,7 +259,8 @@ function fromDbCard(dbCard: DbCard): Card {
     imageData: dbCard.image_data || undefined,
     mimeType: dbCard.mime_type || undefined,
     cardType: dbCard.card_type,
-    locationData: locationData
+    locationData: locationData,
+    itineraireData: itineraireData
   };
 }
 

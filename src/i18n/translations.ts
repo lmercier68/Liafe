@@ -108,6 +108,15 @@ export const translations = {
       failedAddContact:"Échec de l'ajout du contact :",
       failedFetchContact:'Échec de la récupération des contacts:',
     },
+    itineraire: {
+      from: 'De',
+      to: 'À',
+      startAddress: 'Adresse de départ',
+      endAddress: 'Adresse d\'arrivée',
+      enterStartAddress: 'Entrez l\'adresse de départ',
+      enterEndAddress: 'Entrez l\'adresse d\'arrivée',
+      routeCard: 'Carte d\'itinéraire'
+    },
     settings: {
       title: 'Paramètres',
       database: 'Base de données',
@@ -253,6 +262,15 @@ export const translations = {
       failedAddContact:'Failed to add contact:',
       failedFetchContact:'Failed to fetch contacts:',
     },
+    itineraire: {
+      from: 'From',
+      to: 'To',
+      startAddress: 'Start address',
+      endAddress: 'End address',
+      enterStartAddress: 'Enter start address',
+      enterEndAddress: 'Enter end address',
+      routeCard: 'Route card'
+    },
     settings: {
       title: 'Settings',
       database: 'Database',
@@ -397,6 +415,15 @@ export const translations = {
       failedUpdateContact:'No se pudo actualizar el contacto:',
       failedAddContact:'No se pudo agregar el contacto:',
       failedFetchContact:'No se pudieron recuperar los contactos:',
+    },
+    itineraire: {
+      from: 'Desde',
+      to: 'Hasta',
+      startAddress: 'Dirección de inicio',
+      endAddress: 'Dirección de destino',
+      enterStartAddress: 'Ingrese la dirección de inicio',
+      enterEndAddress: 'Ingrese la dirección de destino',
+      routeCard: 'Tarjeta de ruta'
     },
     settings: {
       title: 'Configuración',
