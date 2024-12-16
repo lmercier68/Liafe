@@ -506,9 +506,14 @@ export const useCardStore = create<CardState>()((set, get) => ({
   },
   addConnection: (connection, style='dashed', color="red") => {
     console.log('cardStore - addConnection : ' ,{connection:connection, style:style,color:color})
-    set((state) => ({
-      connections: [...state.connections, { ...connection, style, color }],
-    }));
+  
+    set((state) => {
+      const newConnections = [...state.connections, { ...connection, style, color }];
+      console.log('Updated connections:', newConnections);
+      return {
+        connections: newConnections,
+      };
+    });
   },
   deleteConnection: (start, end) => {
     set((state) => ({

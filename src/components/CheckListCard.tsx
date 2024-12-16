@@ -94,7 +94,7 @@ export function CheckListCard({
   };
 
   const handleTaskConnect = (taskId: string) => {
-    const connectionId = `${id}-task-${taskId}`;
+    const connectionId = `${taskId}`;
     console.log('CheckListCard - handleTaskConnect:', {
       cardId: id,
       taskId,
@@ -111,7 +111,7 @@ export function CheckListCard({
 
    // Ne pas propager isConnecting à la tâche, utiliser une comparaison locale
    const isTaskConnecting = (taskId: string) => {
-    const connectionId = `${id}-task-${taskId}`;
+    const connectionId = `${taskId}`;
    const connectingId =  useCardStore.getState().connectingId;
     console.log('CheckListCard - isTaskConnecting:', {
       taskId,
@@ -219,6 +219,7 @@ export function CheckListCard({
 <div className="space-y-2">
         {localTasks.map(task => (
           <Task
+          id={task.id}
             key={task.id}
             task={task}
             cardId={id}
@@ -227,7 +228,7 @@ export function CheckListCard({
             onUpdate={(updates) => handleTaskUpdate(task.id, updates)}
             onConnect={() => handleTaskConnect(task.id)}
             incomingConnections={incomingConnections.filter(conn => 
-              conn.end === `${id}-task-${task.id}`
+              conn.end === `${task.id}`
             )}
             onDeleteConnection={(startId) => 
               handleTaskConnectionDelete(startId, task.id)

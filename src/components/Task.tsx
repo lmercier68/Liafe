@@ -31,7 +31,7 @@ export function Task({
 }: TaskProps) {
   const { t } = useI18n();
   const isOverdue = task.dueDate && !task.isCompleted && new Date(task.dueDate) < new Date();
-  const taskConnectionId = `${cardId}-task-${task.id}`;
+  const taskConnectionId = `${task.id}`;
 
   const handleConnectClick = (e: React.MouseEvent) => {
     console.log('handleConnectClick - Task.tsx');
@@ -53,6 +53,10 @@ export function Task({
         className={`p-2 bg-white rounded-lg shadow border relative ${
         isConnecting ? 'ring-2 ring-indigo-500' : ''
       }`}
+      style={{
+        
+        zIndex: 20 // Ajoutez un z-index pour s'assurer que la tâche est au-dessus
+      }}
      // onClick={(e) => e.stopPropagation()} // Empêcher la propagation des clics
     >
       <div className="flex items-center gap-2">

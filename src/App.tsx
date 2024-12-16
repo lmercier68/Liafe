@@ -23,7 +23,7 @@ import { useI18n } from './i18n/useTranslation';
 import { calculateAnchor } from './utils/anchor';
 import { constrainPosition } from './utils/position';
 import { GroupOverlay } from './components/GroupOverlay';
-import CardT from './components/CardT';
+
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -248,11 +248,7 @@ function App() {
               }}
             />
           )}
- <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-        <CardT id="1" />
-        <CardT id="2" />
-        <CardT id="3" />
-      </div>
+
 {cards.map((card) => (
   <div
     key={card.id}
@@ -319,18 +315,34 @@ function App() {
   </div>
 ))}
           {connections.map((connection) => {
-            const startCard = cards.find(c => c.id === connection.start);
+             // Vérifier que les éléments source et cible existent dans le DOM
+  const startElement = document.getElementById(connection.start);
+  const endElement = document.getElementById(connection.end);
+  
+
+           let startCard = cards.find(c => c.id === connection.start);
             const endCard = cards.find(c => c.id === connection.end);
             
-            if (!startCard || !endCard) return null;
+
+
+            console.log('Rendering connection:', {
+              startId: connection.start,
+              endId: connection.end,
+              startElement,
+              endElement,
+              startCard,
+              endCard
+            });
+        //    if(!startCard)startCard=connection.start;
+           // if (!startCard || !endCard) return null;
             
-            const dimensions = {
-              width: startCard.isExpanded ? 384 : 256,
-              height: startCard.isExpanded ? 320 : 192
-            };
+          //  const dimensions = {
+          //    width: startCard.isExpanded ? 384 : 256,
+        //      height: startCard.isExpanded ? 320 : 192
+        //    };
             
-            const startAnchor = calculateAnchor(startCard.position, endCard.position, dimensions);
-            const endAnchor = calculateAnchor(endCard.position, startCard.position, dimensions);
+           // const startAnchor = calculateAnchor(startCard.position, endCard.position, dimensions);
+          //  const endAnchor = calculateAnchor(endCard.position, startCard.position, dimensions);
             
             return (
               <Xarrow
@@ -340,8 +352,8 @@ function App() {
                 color={connection.color}
                 strokeWidth={2}
                 path="smooth"
-                startAnchor={startAnchor}
-                endAnchor={endAnchor}
+                   startAnchor="auto"
+        endAnchor="auto"
                 curveness={0.3}
                 showHead={true}
                 headSize={6}
