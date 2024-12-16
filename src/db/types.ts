@@ -59,6 +59,16 @@ export interface DbCard {
   location_data?: string | null;
   itineraire_data?:string | null;
 }
+export interface DbTask {
+    id: string;
+    set_id: string;
+    name: string;
+    dueDate?: string | null;
+    isCompleted: boolean | null;
+    completedDate?: string | null;
+    cardId: string; // Ajout de l'ID de la carte parente
+}
+
 
 export interface DbConnection {
   start_id: string;

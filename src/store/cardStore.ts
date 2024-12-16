@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getAllSets, loadSet, saveSet } from '../db';
-import type { DbCard, DbConnection, DbCardSet } from '../db/types';
+import type { DbCard, DbTask, DbConnection, DbCardSet } from '../db/types';
 
 export interface Card {
   id: string;
@@ -83,13 +83,34 @@ export interface Group {
   };
 }
 
+export interface Task {
+  id: string;
+  name: string;
+  dueDate?: string;
+  isCompleted: boolean;
+  completedDate?: string;
+  cardId: string; // Ajout de l'ID de la carte parente
+  isConnecting: boolean;
+  connectFrom: string | null;
+  incomingConnections: Array<{ start: string; end: string }>;
+}
+
+export interface TaskProps {
+  task: Task;
+  onUpdate: (updates: Partial<Task>) => void;
+  onConnect: (taskID: string) => void;
+  onDeleteConnection: (startId: string) => void;
+}
+
 interface CardState {
   cards: Card[];
+  tasks: Task[];
   connections: Connection[];
   groupConnections: GroupConnection[];
   groups: Group[];
   currentSetId: string | null;
   deleteCard: (id: string) => void;
+  addTask: (task: Task) =>void;
   addCard: (card: Card) => void;
   updateCard: (id: string, updates: Partial<Card>) => void;
   updateCardPosition: (id: string, position: { x: number; y: number }) => void;
@@ -138,6 +159,18 @@ export const LINE_COLORS = {
   sky: '#0ea5e9', 
 } as const;
 
+function toDbTask (task :Task):DbTask {
+  return {
+  id: task.id,
+  set_id:'',
+  name: task.name,
+  dueDate: task.dueDate,
+  isCompleted: task.isCompleted,
+  completedDate: task.completedDate,
+  cardId: task.cardId // Ajout de l'ID de la carte parente
+  }
+
+}
 
 function toDbCard(card: Card): DbCard {
   let budgetData = null;
@@ -285,6 +318,7 @@ function fromDbConnection(dbConn: DbConnection): Connection {
 
 export const useCardStore = create<CardState>()((set, get) => ({
   cards: [],
+  tasks: [],
   connections: [],
   groupConnections: [],
   groups: [],
@@ -328,6 +362,15 @@ export const useCardStore = create<CardState>()((set, get) => ({
         } : card
       ),
     }));
+  },
+  addTask:(task:Task)=> {
+    set((state) =>({
+      
+      tasks: [...state.tasks, task],
+      
+    }))
+    
+    console.log('cardStore - addTask taskadde : ',task );
   },
   createGroup: (bounds, name) => {
     const groupId = crypto.randomUUID();
@@ -532,7 +575,7 @@ export const useCardStore = create<CardState>()((set, get) => ({
   saveToDb: async (name: string) => {
     try {
       console.log('Starting saveToDb with name:', name);
-      const { cards, connections, groups, groupConnections } = get();
+      const { cards, tasks, connections, groups, groupConnections } = get();
       const currentSetId = get().currentSetId;
       const setId = currentSetId || crypto.randomUUID();
       
@@ -544,6 +587,11 @@ export const useCardStore = create<CardState>()((set, get) => ({
           const dbCard = toDbCard(card);
           dbCard.set_id = setId;
           return dbCard;
+        }),
+        tasks:tasks.map(task=> {
+          const dbTask = toDbTask(task);
+          dbTask.set_id = setId;
+          return dbTask;
         }),
         connections: connections.map(conn => ({
           start_id: conn.start,

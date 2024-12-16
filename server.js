@@ -105,6 +105,17 @@ await db.query(`
     FOREIGN KEY (set_id) REFERENCES card_sets(id) ON DELETE CASCADE
   )
   `);
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id VARCHAR(36) PRIMARY KEY,
+      set_id VARCHAR(36) NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      due_date TIMESTAMP,
+      is_completed BOOLEAN DEFAULT FALSE,
+      completed_date TIMESTAMP,
+      card_id VARCHAR(255) NOT NULL
+    );
+  `);
 
 await db.query(`
   CREATE TABLE IF NOT EXISTS image_cards (
@@ -379,7 +390,7 @@ app.post('/api/documents', async (req, res) => {
 });
 
 app.post('/api/sets', async (req, res) => {
-  const { name, cards, connections, groups, groupConnections } = req.body;
+  const { name, cards, tasks, connections, groups, groupConnections } = req.body;
   const setId = req.body.id;
 
   try {
@@ -474,7 +485,33 @@ app.post('/api/sets', async (req, res) => {
         throw cardError;
       }
     }
+    console.log('Processing cards...');
+    for (const task of tasks) {
+      try {
+        console.log('Processing task:', { id: task.id, name: task.name, parent_card: task.cardId });
 
+        // Insert card
+        await db.query(
+          `INSERT INTO tasks (
+            id, set_id, name, due_date, is_completed, completed_date, 
+            card_id
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            task.id,
+            task.set_id,
+            task.name,
+            task.dueDate,
+            task.isCompleted,
+            task.completedDate,
+            task.cardId,
+          ]
+        );
+
+      } catch (taskError) {
+        console.error('Error processing task:', task.id, taskError);
+        throw taskError;
+      }
+    }
     console.log('Processing connections...');
     for (const conn of connections) {
       await db.query(

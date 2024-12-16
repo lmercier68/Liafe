@@ -30,6 +30,7 @@ export function Task({
   onDeleteConnection
 }: TaskProps) {
   const { t } = useI18n();
+  
   const isOverdue = task.dueDate && !task.isCompleted && new Date(task.dueDate) < new Date();
   const taskConnectionId = `${task.id}`;
 

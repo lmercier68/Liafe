@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Maximize2, Minimize2, Link, Unlink, Trash2, Plus, Calendar } from 'lucide-react';
 import { useCardStore, CARD_COLORS } from '../store/cardStore';
+
 import { ColorPicker } from './ColorPicker';
 import { Task } from './Task';
 import { useI18n } from '../i18n/useTranslation';
@@ -45,12 +46,14 @@ export function CheckListCard({
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskDate, setNewTaskDate] = useState<string>('');
   const [localTasks, setLocalTasks] = useState(tasks);
+ 
 
 
   const updateCard = useCardStore((state) => state.updateCard);
   const deleteCard = useCardStore((state) => state.deleteCard);
   const deleteConnection = useCardStore((state) => state.deleteConnection);
   const toggleCardExpansion = useCardStore((state) => state.toggleCardExpansion);
+  const addTask = useCardStore((state) => state.addTask);
 
 
   const handleSave = () => {
@@ -67,13 +70,17 @@ export function CheckListCard({
         id: crypto.randomUUID(),
         name: newTaskName.trim(),
         dueDate: newTaskDate || undefined,
-        isCompleted: false
+        isCompleted: false,
+        cardId: id,
+        isConnecting: false,
+        connectFrom:null,
+        incomingConnections:[]
       };
       
       const updatedTasks = [...localTasks, newTask];
       setLocalTasks(updatedTasks);
       updateCard(id, { tasks: updatedTasks });
-      
+      addTask(newTask);
       setNewTaskName('');
       setNewTaskDate('');
     }
@@ -106,17 +113,15 @@ export function CheckListCard({
 //    useCardStore.getState().startTaskConnection(connectionId);
   };
   const handleTaskConnectionDelete = (startId: string, taskId: string) => {
-    deleteConnection(startId, `${id}-task-${taskId}`);
+    deleteConnection(startId, `${taskId}`);
   };
 
    // Ne pas propager isConnecting à la tâche, utiliser une comparaison locale
    const isTaskConnecting = (taskId: string) => {
     const connectionId = `${taskId}`;
-   const connectingId =  useCardStore.getState().connectingId;
     console.log('CheckListCard - isTaskConnecting:', {
       taskId,
       connectionId,
-      connectingId,
       isConnecting: connectFrom === taskId,
       connectFrom
     });
