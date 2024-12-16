@@ -122,6 +122,12 @@ export const translations = {
       enterEndAddress: 'Entrez l\'adresse d\'arrivée',
       routeCard: 'Carte d\'itinéraire'
     },
+    checklist: {
+      enterTaskName: 'Nom de la tâche...',
+      dueBy: 'À réaliser avant le',
+      completedOn: 'Réalisé le',
+      addTask: 'Ajouter une tâche'
+    },
     settings: {
       title: 'Paramètres',
       database: 'Base de données',
@@ -281,6 +287,12 @@ export const translations = {
       enterEndAddress: 'Enter end address',
       routeCard: 'Route card'
     },
+    checklist: {
+      enterTaskName: 'Task name...',
+      dueBy: 'Due by',
+      completedOn: 'Completed on',
+      addTask: 'Add task'
+    },
     settings: {
       title: 'Settings',
       database: 'Database',
@@ -439,6 +451,12 @@ export const translations = {
       enterStartAddress: 'Ingrese la dirección de inicio',
       enterEndAddress: 'Ingrese la dirección de destino',
       routeCard: 'Tarjeta de ruta'
+    },
+    checklist: {
+      enterTaskName: 'Nombre de la tarea...',
+      dueBy: 'Realizar antes del',
+      completedOn: 'Realizado el',
+      addTask: 'Añadir tarea'
     },
     settings: {
       title: 'Configuración',

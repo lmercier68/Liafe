@@ -14,6 +14,7 @@ import { BudgetCard } from './components/BudgetCard';
 import { ImageCard } from './components/ImageCard';
 import { LocationCard } from './components/LocationCard';
 import { ItineraireCard } from './components/ItineraireCard';
+import { CheckListCard } from './components/CheckListCard';
 import { Sidebar } from './components/Sidebar';
 import { SplashScreen } from './components/SplashScreen';
 import { ConnectionDialog } from './components/ConnectionDialog';
@@ -22,6 +23,7 @@ import { useI18n } from './i18n/useTranslation';
 import { calculateAnchor } from './utils/anchor';
 import { constrainPosition } from './utils/position';
 import { GroupOverlay } from './components/GroupOverlay';
+
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -122,6 +124,7 @@ function App() {
   };
 
   const handleConnect = (cardId: string) => {
+    console.log('app - cardID : ', cardId )
     if (connectingFrom === null) {
       setConnectingFrom(cardId);
     } else if (connectingFrom !== cardId) {
@@ -133,7 +136,9 @@ function App() {
   };
 
   const handleConnectionComplete = (style: 'solid' | 'dashed', color: string) => {
+    console.log( 'app -  handleConnectionComplete :', {connectingFrom:connectingFrom,connectingTo:connectingTo})
     if (connectingFrom && connectingTo) {
+      console.log('app - ajout d une nouvelle connection',{from:connectingFrom,To :connectingTo})
       addConnection({ start: connectingFrom, end: connectingTo }, style, color);
       setConnectingFrom(null);
       setConnectingTo(null);
@@ -290,7 +295,16 @@ function App() {
       incomingConnections={connections.filter(conn => conn.end === card.id)}
       onConnect={() => handleConnect(card.id)}
     />
-    ) : (
+    ) : card.cardType === 'checklist' ? (
+      <CheckListCard
+        {...card}
+        isConnecting={connectingFrom === card.id} 
+        connectFrom={connectingFrom}
+        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        onConnect={(cardId) => {handleConnect(cardId)}} // La connexion est gérée au niveau de la tâche
+      />
+    )
+     : (
       <Card
         {...card}
         isConnecting={connectingFrom === card.id}
@@ -301,18 +315,34 @@ function App() {
   </div>
 ))}
           {connections.map((connection) => {
-            const startCard = cards.find(c => c.id === connection.start);
+             // Vérifier que les éléments source et cible existent dans le DOM
+  const startElement = document.getElementById(connection.start);
+  const endElement = document.getElementById(connection.end);
+  
+
+           let startCard = cards.find(c => c.id === connection.start);
             const endCard = cards.find(c => c.id === connection.end);
             
-            if (!startCard || !endCard) return null;
+
+
+            console.log('Rendering connection:', {
+              startId: connection.start,
+              endId: connection.end,
+              startElement,
+              endElement,
+              startCard,
+              endCard
+            });
+        //    if(!startCard)startCard=connection.start;
+           // if (!startCard || !endCard) return null;
             
-            const dimensions = {
-              width: startCard.isExpanded ? 384 : 256,
-              height: startCard.isExpanded ? 320 : 192
-            };
+          //  const dimensions = {
+          //    width: startCard.isExpanded ? 384 : 256,
+        //      height: startCard.isExpanded ? 320 : 192
+        //    };
             
-            const startAnchor = calculateAnchor(startCard.position, endCard.position, dimensions);
-            const endAnchor = calculateAnchor(endCard.position, startCard.position, dimensions);
+           // const startAnchor = calculateAnchor(startCard.position, endCard.position, dimensions);
+          //  const endAnchor = calculateAnchor(endCard.position, startCard.position, dimensions);
             
             return (
               <Xarrow
@@ -322,8 +352,8 @@ function App() {
                 color={connection.color}
                 strokeWidth={2}
                 path="smooth"
-                startAnchor={startAnchor}
-                endAnchor={endAnchor}
+                   startAnchor="auto"
+        endAnchor="auto"
                 curveness={0.3}
                 showHead={true}
                 headSize={6}
