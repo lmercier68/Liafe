@@ -14,6 +14,7 @@ import { BudgetCard } from './components/BudgetCard';
 import { ImageCard } from './components/ImageCard';
 import { LocationCard } from './components/LocationCard';
 import { ItineraireCard } from './components/ItineraireCard';
+import { CheckListCard } from './components/CheckListCard';
 import { Sidebar } from './components/Sidebar';
 import { SplashScreen } from './components/SplashScreen';
 import { ConnectionDialog } from './components/ConnectionDialog';
@@ -22,6 +23,7 @@ import { useI18n } from './i18n/useTranslation';
 import { calculateAnchor } from './utils/anchor';
 import { constrainPosition } from './utils/position';
 import { GroupOverlay } from './components/GroupOverlay';
+import CardT from './components/CardT';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -122,6 +124,7 @@ function App() {
   };
 
   const handleConnect = (cardId: string) => {
+    console.log('app - cardID : ', cardId )
     if (connectingFrom === null) {
       setConnectingFrom(cardId);
     } else if (connectingFrom !== cardId) {
@@ -133,7 +136,9 @@ function App() {
   };
 
   const handleConnectionComplete = (style: 'solid' | 'dashed', color: string) => {
+    console.log( 'app -  handleConnectionComplete :', {connectingFrom:connectingFrom,connectingTo:connectingTo})
     if (connectingFrom && connectingTo) {
+      console.log('app - ajout d une nouvelle connection',{from:connectingFrom,To :connectingTo})
       addConnection({ start: connectingFrom, end: connectingTo }, style, color);
       setConnectingFrom(null);
       setConnectingTo(null);
@@ -243,7 +248,11 @@ function App() {
               }}
             />
           )}
-
+ <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+        <CardT id="1" />
+        <CardT id="2" />
+        <CardT id="3" />
+      </div>
 {cards.map((card) => (
   <div
     key={card.id}
@@ -290,7 +299,16 @@ function App() {
       incomingConnections={connections.filter(conn => conn.end === card.id)}
       onConnect={() => handleConnect(card.id)}
     />
-    ) : (
+    ) : card.cardType === 'checklist' ? (
+      <CheckListCard
+        {...card}
+        isConnecting={connectingFrom === card.id} 
+        connectFrom={connectingFrom}
+        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        onConnect={(cardId) => {handleConnect(cardId)}} // La connexion est gérée au niveau de la tâche
+      />
+    )
+     : (
       <Card
         {...card}
         isConnecting={connectingFrom === card.id}
