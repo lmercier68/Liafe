@@ -113,7 +113,10 @@ await db.query(`
       due_date TIMESTAMP,
       is_completed BOOLEAN DEFAULT FALSE,
       completed_date TIMESTAMP,
-      card_id VARCHAR(255) NOT NULL
+      card_id VARCHAR(255) NOT NULL,
+      start VARCHAR(36),
+      end VARCHAR(36),
+      FOREIGN KEY (set_id) REFERENCES card_sets(id) ON DELETE CASCADE
     );
   `);
 
@@ -140,6 +143,17 @@ await db.query(`
     FOREIGN KEY (set_id) REFERENCES card_sets(id) ON DELETE CASCADE
   )
   `);
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS tasksConnections (
+      set_id VARCHAR(36) NOT NULL,
+      start VARCHAR(36) NOT NULL,
+      end VARCHAR(36) NOT NULL,
+      style VARCHAR(20) NOT NULL,
+      color VARCHAR(50) NOT NULL,
+      FOREIGN KEY (set_id) REFERENCES card_sets(id) ON DELETE CASCADE
+    )
+    `);
+  
 
 await db.query(`
   CREATE TABLE IF NOT EXISTS documents (
@@ -390,7 +404,7 @@ app.post('/api/documents', async (req, res) => {
 });
 
 app.post('/api/sets', async (req, res) => {
-  const { name, cards, tasks, connections, groups, groupConnections } = req.body;
+  const { name, cards, tasks,taskConnections, connections, groups, groupConnections } = req.body;
   const setId = req.body.id;
 
   try {
@@ -485,17 +499,17 @@ app.post('/api/sets', async (req, res) => {
         throw cardError;
       }
     }
-    console.log('Processing cards...');
+    console.log('Processing tasks...');
     for (const task of tasks) {
       try {
-        console.log('Processing task:', { id: task.id, name: task.name, parent_card: task.cardId });
+        console.log('Processing task:', { id: task.id, name: task.name, parent_card: task.cardId ,from:task.connectingFrom, To: task.conntecingTo});
 
         // Insert card
         await db.query(
           `INSERT INTO tasks (
             id, set_id, name, due_date, is_completed, completed_date, 
-            card_id
-          ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            card_id, start, end
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             task.id,
             task.set_id,
@@ -504,11 +518,44 @@ app.post('/api/sets', async (req, res) => {
             task.isCompleted,
             task.completedDate,
             task.cardId,
+            task.connectingFrom,
+            task.connectingTo
           ]
         );
 
       } catch (taskError) {
         console.error('Error processing task:', task.id, taskError);
+        throw taskError;
+      }
+    }
+
+    console.log('Processing tasks Connections...');
+    console.log('Processing task CONNECTION:',taskConnections);
+    for (const taskConnection of taskConnections) {
+      try {
+        console.log('Processing task connections:', { set_id: taskConnection.set_id,from: taskConnection.start, To: taskConnection.end, style: taskConnection.style ,color:taskConnection.color});
+        if( taskConnection.set_id &&
+          taskConnection.start &&
+          taskConnection.end &&
+          taskConnection.style &&
+          taskConnection.color){
+        // Insert card
+        await db.query(
+          `INSERT INTO tasksConnections (
+            set_id,start, end,style,color
+          ) VALUES (?, ?, ?, ?, ?)`,
+          [
+            taskConnection.set_id,
+            taskConnection.start,
+            taskConnection.end,
+            taskConnection.style,
+            taskConnection.color
+   
+          ]
+        );}
+
+      } catch (taskError) {
+        console.error('Error processing task connection:', taskConnection.start +  '-' + taskConnection.end, taskError);
         throw taskError;
       }
     }
@@ -572,8 +619,60 @@ app.post('/api/sets', async (req, res) => {
 });
 
 
+app.get('/api/tasks/:cardId', async (req, res) => {
+  try {
+    console.log('Début de la recherche des tâches');
+
+    // Récupérer les tâches de la table `tasks` en fonction de `card_id`
+    const [taskRows] = await db.query(
+      'SELECT * FROM tasks WHERE card_id = ?',
+      [req.params.cardId]
+    );
+
+    // Initialiser une constante pour stocker les enregistrements de `tasksConnections`
+    let tasksConnectionRows = [];
+    console.log(' tasks retournée: ' , {tasks: taskRows})
+    
+
+    // Pour chaque tâche trouvée, rechercher les enregistrements correspondants dans `tasksConnections`
+    for (const task of taskRows) {
+      const [connections] = await db.query(
+        'SELECT * FROM tasksConnections WHERE set_id = ? AND (start = ? OR end = ?)',
+        [task.set_id, task.id, task.id]
+      );
+      console.log(' tasks id: ' , {tasks_id: task.id})
+      tasksConnectionRows = tasksConnectionRows.concat(connections);
+    }
+console.log(' tasksConnections retournée: ' , {tasksConnections: tasksConnectionRows})
+    // Renvoyer les tâches et les connexions trouvées
+    res.json({ tasks: taskRows, tasksConnections: tasksConnectionRows });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+async function loadTasksForCard(cardId) {
+  try {
+    const [rows] = await db.query('SELECT * FROM tasks WHERE card_id = ?', [cardId]);
+    return rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      dueDate: row.due_date,
+      isCompleted: row.is_completed,
+      completedDate: row.completed_date,
+      cardId: row.card_id,
+      isConnecting: false,
+      connectFrom: null,
+      incomingConnections: []
+    }));
+  } catch (error) {
+    console.error('Failed to load tasks for card:', error);
+    throw error;
+  }
+}
+
+
 app.put('/api/sets/:setId', async (req, res) => {
-  const { name, cards, connections, groups, groupConnections } = req.body;
+  const { name, cards, tasks,taskConnections, connections, groups, groupConnections } = req.body;
   const setId = req.params.setId;
 
   try {
@@ -596,6 +695,8 @@ app.put('/api/sets/:setId', async (req, res) => {
     await db.query('DELETE FROM connections WHERE set_id = ?', [setId]);
     await db.query('DELETE FROM groups_table WHERE set_id = ?', [setId]);
     await db.query('DELETE FROM group_connections WHERE set_id = ?', [setId]);
+    await db.query('DELETE FROM tasksConnections WHERE set_id = ?', [setId]);
+    await db.query('DELETE FROM tasks WHERE set_id = ?', [setId]);
 
     // Insert new data
     console.log('Inserting updated cards...');
@@ -677,7 +778,69 @@ app.put('/api/sets/:setId', async (req, res) => {
       }
     }
 
-   
+    // Insert Task data
+    console.log('Processing tasks...');
+    console.log('Processing TASKS',tasks);
+    for (const task of tasks) {
+      try {
+        console.log('Processing task:', { id: task.id, name: task.name, parent_card: task.cardId ,from:task.connectingFrom, To: task.conntecingTo});
+
+        // Insert card
+        await db.query(
+          `INSERT INTO tasks (
+            id, set_id, name, due_date, is_completed, completed_date, 
+            card_id, start, end
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            task.id,
+            task.set_id,
+            task.name,
+            task.dueDate,
+            task.isCompleted,
+            task.completedDate,
+            task.cardId,
+            task.connectingFrom,
+            task.connectingTo
+          ]
+        );
+
+      } catch (taskError) {
+        console.error('Error processing task:', task.id, taskError);
+        throw taskError;
+      }
+    }
+
+   // Insert TasksConnection
+   console.log('Processing tasks Connections...');
+   console.log('Processing task CONNECTION:',taskConnections);
+   for (const taskConnection of taskConnections) {
+     try {
+       console.log('Processing task connections:', { set_id: taskConnection.set_id,from: taskConnection.start, To: taskConnection.end, style: taskConnection.style ,color:taskConnection.color});
+       if( taskConnection.set_id &&
+         taskConnection.start &&
+         taskConnection.end &&
+         taskConnection.style &&
+         taskConnection.color){
+       // Insert card
+       await db.query(
+         `INSERT INTO tasksConnections (
+           set_id,start, end,style,color
+         ) VALUES (?, ?, ?, ?, ?)`,
+         [
+           taskConnection.set_id,
+           taskConnection.start,
+           taskConnection.end,
+           taskConnection.style,
+           taskConnection.color
+  
+         ]
+       );}
+
+     } catch (taskError) {
+       console.error('Error processing task connection:', taskConnection.start +  '-' + taskConnection.end, taskError);
+       throw taskError;
+     }
+   }
 
     // Insert other data...
     console.log('Processing connections...');

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { getAllSets, loadSet, saveSet } from '../db';
-import type { DbCard, DbTask, DbConnection, DbCardSet } from '../db/types';
+import type { DbCard, DbTask, DbTaskConnection, DbConnection, DbCardSet } from '../db/types';
+import { Task } from '../components/Task';
 
 export interface Card {
   id: string;
@@ -24,11 +25,15 @@ export interface Card {
     }>;
   };
   itineraireData?: ItineraireData;
-  
+  tasks:Task[],
   locationData?: LocationData;
   imageData?: string;
   mimeType?: string;
   groupId?: string | null;
+  cardId: string;
+  isConnecting: boolean;
+  connectingFrom: string;
+  connectingTo: string;
 }
 
 interface ItineraireData {
@@ -59,7 +64,13 @@ export interface Connection {
   style: 'solid' | 'dashed';
   color: string;
 }
-
+export interface taskConnection {
+  set_id :string;
+  start: string;
+  end: string;
+  style: 'solid' | 'dashed';
+  color: string;
+}
 interface GroupConnection {
   start: string;
   end: string;
@@ -91,11 +102,13 @@ export interface Task {
   completedDate?: string;
   cardId: string; // Ajout de l'ID de la carte parente
   isConnecting: boolean;
-  connectFrom: string | null;
+  connectingFrom: string | null;
+  connectingTo: string | null;
   incomingConnections: Array<{ start: string; end: string }>;
 }
 
 export interface TaskProps {
+  id: string;
   task: Task;
   onUpdate: (updates: Partial<Task>) => void;
   onConnect: (taskID: string) => void;
@@ -106,18 +119,24 @@ interface CardState {
   cards: Card[];
   tasks: Task[];
   connections: Connection[];
+  taskConnections:taskConnection[];
   groupConnections: GroupConnection[];
   groups: Group[];
   currentSetId: string | null;
   deleteCard: (id: string) => void;
   addTask: (task: Task) =>void;
+  upDateTasks: (task: Task)=>void;
   addCard: (card: Card) => void;
   updateCard: (id: string, updates: Partial<Card>) => void;
   updateCardPosition: (id: string, position: { x: number; y: number }) => void;
   toggleCardExpansion: (id: string) => void;
   deleteConnection: (start: string, end: string) => void;
   addConnection: (connection: Omit<Connection, 'style' | 'color'>, style: 'solid' | 'dashed', color: string) => void;
+  
+
   updateConnection: (start: string, end: string, updates: Partial<Connection>) => void;
+  addTaskConnection: (taskConnection: Omit<taskConnection, 'style' | 'color'>, style: 'solid' | 'dashed', color: string) => void;
+  upDateTaskConnections: (tasksConnection:taskConnection)=> void;
   createGroup: (bounds: { x: number; y: number; width: number; height: number }, name: string) => void;
   updateGroupBounds: (groupId: string, bounds: { x: number; y: number; width: number; height: number }) => void;
   deleteGroup: (groupId: string, deleteCards?: boolean) => void;
@@ -159,7 +178,8 @@ export const LINE_COLORS = {
   sky: '#0ea5e9', 
 } as const;
 
-function toDbTask (task :Task):DbTask {
+function toDbTask (task :Task ):DbTask  {
+  console.log(' CS - toDbTask - task cardID:',task.cardId)
   return {
   id: task.id,
   set_id:'',
@@ -167,9 +187,21 @@ function toDbTask (task :Task):DbTask {
   dueDate: task.dueDate,
   isCompleted: task.isCompleted,
   completedDate: task.completedDate,
-  cardId: task.cardId // Ajout de l'ID de la carte parente
+  cardId: task.cardId, // Ajout de l'ID de la carte parente
+  connectingFrom: task.connectingFrom,
+  connectingTo: task.connectingTo
   }
 
+}
+function toDbTaskConnection (taskConnection :taskConnection, setId:string ):DbTaskConnection  {
+  return {
+    set_id: setId,
+    start: taskConnection.start,
+    end: taskConnection.end,
+    style: taskConnection.style,
+    color: taskConnection.color
+
+  }
 }
 
 function toDbCard(card: Card): DbCard {
@@ -205,6 +237,7 @@ function toDbCard(card: Card): DbCard {
   }
   return {
     id: card.id,
+    tasks: card.tasks,
     set_id: '', // This will be set by the saveSet function
     title: card.title,
     content: card.content,
@@ -223,6 +256,8 @@ function toDbCard(card: Card): DbCard {
     itineraire_data: itineraireData,
   };
 }
+
+
 
 function fromDbCard(dbCard: DbCard): Card {
   let budgetData;
@@ -250,6 +285,8 @@ function fromDbCard(dbCard: DbCard): Card {
       expenses: []
     };
   }
+ 
+
 
   let locationData: LocationData | undefined;
   try {
@@ -277,8 +314,13 @@ function fromDbCard(dbCard: DbCard): Card {
 
   return {
     id: dbCard.id,
+    cardId: dbCard.id,
     title: dbCard.title,
     content: dbCard.content,
+    isConnecting: false,
+    connectingFrom: '',
+    connectingTo: '',
+    tasks:[],
     position: {
       x: dbCard.position_x,
       y: dbCard.position_y,
@@ -293,7 +335,8 @@ function fromDbCard(dbCard: DbCard): Card {
     mimeType: dbCard.mime_type || undefined,
     cardType: dbCard.card_type,
     locationData: locationData,
-    itineraireData: itineraireData
+    itineraireData: itineraireData,
+ 
   };
 }
 
@@ -320,6 +363,7 @@ export const useCardStore = create<CardState>()((set, get) => ({
   cards: [],
   tasks: [],
   connections: [],
+  taskConnections: [],
   groupConnections: [],
   groups: [],
   currentSetId: null,
@@ -558,6 +602,53 @@ export const useCardStore = create<CardState>()((set, get) => ({
       };
     });
   },
+  addTaskConnection: (taskConnection: Omit<taskConnection, 'style' | 'color'>, style: 'solid' | 'dashed', color: string) => {
+    console.log('cardStore - addTaskConnection : ', { taskConnection: taskConnection, style: style, color: color });
+  
+    set((state) => {
+      const newTaskConnections = [...state.taskConnections, { ...taskConnection, style, color }];
+      console.log('Updated task connections:', newTaskConnections);
+      return {
+        taskConnections: newTaskConnections,
+      };
+    });
+  },
+  upDateTasks: (task: Task) => {
+    console.log('task dans update', task);
+  
+    set((state) => {
+      // Vérifier si la tâche existe déjà dans state.tasks
+      const exists = state.tasks.some(existingTask => existingTask.id === task.id && existingTask.cardId=== task.cardId);
+  console.log ('task exist in table: ', {exists,task})
+      if (!exists) {
+        // Si la tâche n'existe pas, l'ajouter
+        const newTasks = [...state.tasks, { ...task }];
+        console.log('Updated task:', newTasks);
+        return {
+          tasks: newTasks,
+        };
+      } else {
+        // Si la tâche existe déjà, ne rien faire
+        console.log('Task already exists, not adding.');
+        return state;
+      }
+    });
+  },
+  upDateTaskConnections:(taskConnection: taskConnection)=>{
+    const elementFrom = document.getElementById(taskConnection.start);
+    const elementTo = document.getElementById(taskConnection.end);
+if(!elementFrom)console.log("pas d'element from")
+  if(!elementTo)console.log("pas d'element to")
+  if(elementFrom && elementTo){
+    console.log('taskConnection dans update', taskConnection)
+    set((state) => {
+      const newTaskConnections = [...state.taskConnections, { ...taskConnection}];
+      console.log('Updated task connections:', newTaskConnections);
+      return {
+        taskConnections: newTaskConnections,
+      };
+    });}
+  },
   deleteConnection: (start, end) => {
     set((state) => ({
       connections: state.connections.filter(
@@ -575,7 +666,7 @@ export const useCardStore = create<CardState>()((set, get) => ({
   saveToDb: async (name: string) => {
     try {
       console.log('Starting saveToDb with name:', name);
-      const { cards, tasks, connections, groups, groupConnections } = get();
+      const { cards, tasks,taskConnections, connections, groups, groupConnections } = get();
       const currentSetId = get().currentSetId;
       const setId = currentSetId || crypto.randomUUID();
       
@@ -589,6 +680,7 @@ export const useCardStore = create<CardState>()((set, get) => ({
           return dbCard;
         }),
         tasks:tasks.map(task=> {
+          console.log('CS - task mapping- task : ' ,task)
           const dbTask = toDbTask(task);
           dbTask.set_id = setId;
           return dbTask;
@@ -600,6 +692,13 @@ export const useCardStore = create<CardState>()((set, get) => ({
           style: conn.style,
           color: conn.color
         })),
+        taskConnections:taskConnections.map(taskConnection=> {
+          if(taskConnection){
+         console.log('CS - taskConnection mapping- taskConnection : ' ,taskConnection)
+          const dbTaskConnection = toDbTaskConnection(taskConnection,setId)
+          console.log('CS - taskConnection mapping- dbTaskConnection : ' ,dbTaskConnection)
+          return dbTaskConnection;}
+        }),
         groups: groups.map(group => ({
           id: group.id,
           set_id: setId,

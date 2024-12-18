@@ -32,10 +32,12 @@ function App() {
   const { 
     cards, 
     connections, 
+    taskConnections,
     groups, 
     groupConnections,
     updateCardPosition, 
     addConnection,
+    addTaskConnection,
     addGroupConnection,
     deleteGroupConnection,
     loadFromDb, 
@@ -44,6 +46,7 @@ function App() {
   } = useCardStore();
   const [isGroupCreationMode, setIsGroupCreationMode] = useState(false);
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
+  const [taskParentCardId, setTaskParentCardId]=useState<string | null>(null);
   const [connectingTo, setConnectingTo] = useState<string | null>(null);
   const [connectingGroupFrom, setConnectingGroupFrom] = useState<string | null>(null);
   const [connectingGroupTo, setConnectingGroupTo] = useState<string | null>(null);
@@ -134,14 +137,34 @@ function App() {
       setConnectingTo(null);
     }
   };
-
+  const handleConnectTask = ( taskId: string,cardId: string,taskName:string) => {
+    console.log('app - handle connect TASK : ', {taskId, cardId, taskName} )
+    if (connectingFrom === null) {
+      setConnectingFrom(taskId);
+      setTaskParentCardId(cardId);
+    } else if (connectingFrom !== taskId) {
+      setConnectingTo(taskId);
+      setTaskParentCardId(cardId);
+    } else {
+      setTaskParentCardId(null)
+      setConnectingFrom(null);
+      setConnectingTo(null);
+    }
+  };
   const handleConnectionComplete = (style: 'solid' | 'dashed', color: string) => {
-    console.log( 'app -  handleConnectionComplete :', {connectingFrom:connectingFrom,connectingTo:connectingTo})
-    if (connectingFrom && connectingTo) {
+    console.log( 'app -  handleConnectionComplete :', {connectingFrom:connectingFrom,connectingTo:connectingTo,taskParentCardId:taskParentCardId})
+    if (connectingFrom && connectingTo && !taskParentCardId) {
       console.log('app - ajout d une nouvelle connection',{from:connectingFrom,To :connectingTo})
       addConnection({ start: connectingFrom, end: connectingTo }, style, color);
       setConnectingFrom(null);
       setConnectingTo(null);
+    }
+    if (connectingFrom && connectingTo && taskParentCardId) {
+      console.log('app - ajout d une nouvelle task connection',{from:connectingFrom,To :connectingTo})
+      addTaskConnection({ start: connectingFrom, end: connectingTo }, style, color);
+      setConnectingFrom(null);
+      setConnectingTo(null);
+      setTaskParentCardId(null);
     }
   };
 
@@ -301,7 +324,7 @@ function App() {
         isConnecting={connectingFrom === card.id} 
         connectFrom={connectingFrom}
         incomingConnections={connections.filter(conn => conn.end === card.id)}
-        onConnect={(cardId) => {handleConnect(cardId)}} // La connexion est gérée au niveau de la tâche
+        onConnectTask={(taskId,cardId,taskName) => {handleConnectTask(taskId,cardId,taskName)}} // La connexion est gérée au niveau de la tâche
       />
     )
      : (
@@ -360,6 +383,60 @@ function App() {
                 headShape="arrow1"
                 animateDrawing={0.3}
                 dashness={connection.style === 'dashed' ? { animation: 1 } : false}
+                _cpx1Offset={50}
+                _cpx2Offset={50}
+                _extendSVGcanvas={50}
+                className="connection-line"
+              />
+            );
+          })}
+             {taskConnections.map((taskConnection) => {
+             // Vérifier que les éléments source et cible existent dans le DOM
+  const startElement = document.getElementById(taskConnection.start);
+  const endElement = document.getElementById(taskConnection.end);
+  
+
+           let startCard = cards.find(c => c.id === taskConnection.start);
+            const endCard = cards.find(c => c.id === taskConnection.end);
+            if(!startCard || !endCard)
+
+
+            console.log('Rendering task connection:', {
+              taskConnections: {taskConnections},
+              startId: taskConnection.start,
+              endId: taskConnection.end,
+              startElement,
+              endElement,
+              startCard,
+              endCard
+            });
+        //    if(!startCard)startCard=connection.start;
+           // if (!startCard || !endCard) return null;
+            
+          //  const dimensions = {
+          //    width: startCard.isExpanded ? 384 : 256,
+        //      height: startCard.isExpanded ? 320 : 192
+        //    };
+            
+           // const startAnchor = calculateAnchor(startCard.position, endCard.position, dimensions);
+          //  const endAnchor = calculateAnchor(endCard.position, startCard.position, dimensions);
+            
+            return (
+              <Xarrow
+                key={`${taskConnection.start}-${taskConnection.end}-${draggedCardId || ''}-${connectionUpdateKey}`}
+                start={taskConnection.start}
+                end={taskConnection.end}
+                color={taskConnection.color}
+                strokeWidth={2}
+                path="smooth"
+                   startAnchor="auto"
+        endAnchor="auto"
+                curveness={0.3}
+                showHead={true}
+                headSize={6}
+                headShape="arrow1"
+                animateDrawing={0.3}
+                dashness={taskConnection.style === 'dashed' ? { animation: 1 } : false}
                 _cpx1Offset={50}
                 _cpx2Offset={50}
                 _extendSVGcanvas={50}

@@ -3,6 +3,7 @@ import { Link } from 'lucide-react';
 import { useI18n } from '../i18n/useTranslation';
 
 interface TaskProps {
+  id: string;
   task: {
     id: string;
     name: string;
@@ -12,7 +13,8 @@ interface TaskProps {
   };
   cardId: string; // Ajout de l'ID de la carte parente
   isConnecting: boolean;
-  connectFrom:string;
+  connectFrom:string |null;
+  connectingTo: string | null;
   onUpdate: (updates: Partial<TaskProps['task']>) => void;
   onConnect: (taskID:string) => void;
   incomingConnections: Array<{ start: string; end: string }>;
@@ -24,6 +26,7 @@ export function Task({
   cardId,
   isConnecting,
   connectFrom,
+  connectingTo,
   onUpdate,
   onConnect,
   incomingConnections,

@@ -40,6 +40,19 @@ export interface ItineraireData {
     };
 };
 
+export interface Task {
+  id: string;
+  name: string;
+  dueDate?: string;
+  isCompleted: boolean;
+  completedDate?: string;
+  cardId: string; // Ajout de l'ID de la carte parente
+  isConnecting: boolean;
+  connectingFrom: string | null;
+  connectingTo:string |null;
+  incomingConnections: Array<{ start: string; end: string }>;
+}
+
 export interface DbCard {
   id: string;
   set_id: string;
@@ -58,6 +71,7 @@ export interface DbCard {
   mime_type: string | null;
   location_data?: string | null;
   itineraire_data?:string | null;
+  tasks:Task[];
 }
 export interface DbTask {
     id: string;
@@ -67,8 +81,16 @@ export interface DbTask {
     isCompleted: boolean | null;
     completedDate?: string | null;
     cardId: string; // Ajout de l'ID de la carte parente
+    connectingFrom :string |null;
+    connectingTo: string | null;
 }
-
+export interface DbTaskConnection {
+  set_id:string;
+  start: string;
+  end: string;
+  style: 'solid' | 'dashed';
+  color: string;
+}
 
 export interface DbConnection {
   start_id: string;

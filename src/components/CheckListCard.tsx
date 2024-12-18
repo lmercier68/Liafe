@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Maximize2, Minimize2, Link, Unlink, Trash2, Plus, Calendar } from 'lucide-react';
 import { useCardStore, CARD_COLORS } from '../store/cardStore';
@@ -21,9 +21,14 @@ interface CheckListCardProps {
     dueDate?: string;
     isCompleted: boolean;
     completedDate?: string;
+    cardId: string; // Ajout de l'ID de la carte parente
+    isConnecting: boolean;
+    connectingFrom: string | null;
+    connectingTo:string |null;
+    incomingConnections: Array<{ start: string; end: string }>;
   }>;
   incomingConnections: Array<{ start: string; end: string }>;
-  onConnect: (cardId:string) => void;
+  onConnectTask: (taskId: string,cardId:string,taskName: string) => void;
 }
 
 export function CheckListCard({
@@ -36,7 +41,7 @@ export function CheckListCard({
     color,
     tasks = [],
     incomingConnections,
-    onConnect,
+    onConnectTask,
   
   }: CheckListCardProps) {
   const { t } = useI18n();
@@ -54,6 +59,48 @@ export function CheckListCard({
   const deleteConnection = useCardStore((state) => state.deleteConnection);
   const toggleCardExpansion = useCardStore((state) => state.toggleCardExpansion);
   const addTask = useCardStore((state) => state.addTask);
+  const upDateTaskConnections =useCardStore((state)=> state.upDateTaskConnections);
+  const upDateTasks =useCardStore((state)=> state.upDateTasks);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/tasks/${id}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('data fetch task', data.tasks)
+        console.log('data fetch taskConnection', data.tasksConnections)
+        if (Array.isArray(data.tasks)) {
+          setLocalTasks(data.tasks);
+          data.tasks.forEach(task => {
+            const paramtCardId = task.card_id;
+            const updatedTask = { ...task, cardId: paramtCardId };
+            console.log('data fetch task Modified', updatedTask);
+            upDateTasks(updatedTask);
+            console.log('updated task in CL', updatedTask);
+          });
+        } else {
+          console.error('data.tasks is not an array:', data.tasks);
+        }
+  
+        if (Array.isArray(data.tasksConnections)) {
+          data.tasksConnections.forEach(taskConnection => {
+            upDateTaskConnections(taskConnection);
+          });
+        } else {
+          console.error('data.tasksConnections is not an array:', data.tasksConnections);
+        }
+  
+        console.log('localTasks :', localTasks);
+      } catch (error) {
+        console.error('Failed to fetch tasks:', error);
+      }
+    };
+  
+    fetchTasks();
+  }, []);
 
 
   const handleSave = () => {
@@ -73,7 +120,8 @@ export function CheckListCard({
         isCompleted: false,
         cardId: id,
         isConnecting: false,
-        connectFrom:null,
+        connectingFrom:null,
+        connectingTo:null,
         incomingConnections:[]
       };
       
@@ -101,14 +149,14 @@ export function CheckListCard({
   };
 
   const handleTaskConnect = (taskId: string) => {
-    const connectionId = `${taskId}`;
+    const taskName = `task-${taskId}`;
     console.log('CheckListCard - handleTaskConnect:', {
       cardId: id,
       taskId,
-      connectionId,
+      taskName,
       connectFrom
     });
-    onConnect(connectionId);
+    onConnectTask(taskId,id,taskName);
 
 //    useCardStore.getState().startTaskConnection(connectionId);
   };
@@ -161,7 +209,7 @@ export function CheckListCard({
           <div className="flex gap-2">
             <ColorPicker onColorSelect={(color) => updateCard(id, { color })} currentColor={color} />
             <button
-              onClick={()=>{onConnect(id)}}
+              onClick={()=>{handleTaskConnect(id)}}
               className={`p-1 hover:bg-gray-100 rounded ${
                 isConnecting ? 'bg-indigo-100 text-indigo-600' : ''
               }`}
@@ -229,6 +277,7 @@ export function CheckListCard({
             task={task}
             cardId={id}
             connectFrom={connectFrom}
+            connectingTo={'tt'}
             isConnecting={isTaskConnecting(task.id)}
             onUpdate={(updates) => handleTaskUpdate(task.id, updates)}
             onConnect={() => handleTaskConnect(task.id)}

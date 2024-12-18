@@ -62,6 +62,7 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
           content: `File: ${filePath}\nAdded: ${new Date().toLocaleString()}${
             comment ? `\n\nComment: ${comment}` : ''
           }`,
+          tasks:[],
           position: {
             x: Math.random() * (window.innerWidth - 400) + 200,
             y: Math.random() * (window.innerHeight - 300) + 100,
@@ -85,6 +86,7 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
       id,
       title: t('cards.newCard'),
       content: t('cards.addContent'),
+      tasks:[],
       position: {
         x: Math.random() * (window.innerWidth - 400) + 200,
         y: Math.random() * (window.innerHeight - 300) + 100,
@@ -103,6 +105,7 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
       id,
       title: t('cards.imageCard'),
       content: '',
+      tasks:[],
       position: {
         x: Math.random() * (window.innerWidth - 400) + 200,
         y: Math.random() * (window.innerHeight - 300) + 100,
@@ -121,6 +124,7 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
       id,
       title: type === 'total-available' ? t('budget.overview') : t('budget.expenseTracker'),
       content: '',
+      tasks:[],
       position: {
         x: Math.random() * (window.innerWidth - 400) + 200,
         y: Math.random() * (window.innerHeight - 300) + 100,
@@ -151,6 +155,7 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
         y: Math.random() * (window.innerHeight - 300) + 100,
       },
       color: 'sky',
+      tasks:[],
       cardType: 'location',
       isExpanded: true,
       dueDate: null,
@@ -172,6 +177,7 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
       id,
       title: t('itineraire.routeCard'),
       content: '',
+      tasks:[],
       position: {
         x: Math.random() * (window.innerWidth - 400) + 200,
         y: Math.random() * (window.innerHeight - 300) + 100,
@@ -194,6 +200,7 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
       id,
       title: t('cards.noteCard'),
       content: '',
+      tasks:[],
       position: {
         x: Math.random() * (window.innerWidth - 400) + 200,
         y: Math.random() * (window.innerHeight - 300) + 100,
@@ -213,6 +220,7 @@ export function Sidebar({ disabled, isGroupCreationMode, onToggleGroupCreation }
       id,
       title: t('cards.checklistCard'),
       content: '',
+      tasks:[],
       position: {
         x: Math.random() * (window.innerWidth - 400) + 200,
         y: Math.random() * (window.innerHeight - 300) + 100,
