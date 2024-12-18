@@ -325,6 +325,7 @@ function App() {
         connectFrom={connectingFrom}
         incomingConnections={connections.filter(conn => conn.end === card.id)}
         onConnectTask={(taskId,cardId,taskName) => {handleConnectTask(taskId,cardId,taskName)}} // La connexion est gérée au niveau de la tâche
+        onConnect={() => handleConnect(card.id)}
       />
     )
      : (

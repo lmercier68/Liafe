@@ -29,6 +29,7 @@ interface CheckListCardProps {
   }>;
   incomingConnections: Array<{ start: string; end: string }>;
   onConnectTask: (taskId: string,cardId:string,taskName: string) => void;
+  onConnect: () => void;
 }
 
 export function CheckListCard({
@@ -42,6 +43,7 @@ export function CheckListCard({
     tasks = [],
     incomingConnections,
     onConnectTask,
+    onConnect
   
   }: CheckListCardProps) {
   const { t } = useI18n();
@@ -209,7 +211,7 @@ export function CheckListCard({
           <div className="flex gap-2">
             <ColorPicker onColorSelect={(color) => updateCard(id, { color })} currentColor={color} />
             <button
-              onClick={()=>{handleTaskConnect(id)}}
+              onClick={()=>{onConnect}}
               className={`p-1 hover:bg-gray-100 rounded ${
                 isConnecting ? 'bg-indigo-100 text-indigo-600' : ''
               }`}
