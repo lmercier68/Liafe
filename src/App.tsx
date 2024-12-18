@@ -303,6 +303,7 @@ function App() {
         budgetData={card.budgetData || { totalAmount: 0, availableAmount: 0, expenses: [] }}
         isConnecting={connectingFrom === card.id}
         incomingConnections={connections.filter(conn => conn.end === card.id)}
+       
         onConnect={() => handleConnect(card.id)}
       />
     ) : card.cardType === 'location' ? (

@@ -53,16 +53,18 @@ export function CheckListCard({
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskDate, setNewTaskDate] = useState<string>('');
   const [localTasks, setLocalTasks] = useState(tasks);
- 
-
+  const [forceUpdate, setForceUpdate] = useState(false); // État pour forcer le re-rendu
+const [tasksConnections,setTasksConnections] =useState([]);
 
   const updateCard = useCardStore((state) => state.updateCard);
   const deleteCard = useCardStore((state) => state.deleteCard);
   const deleteConnection = useCardStore((state) => state.deleteConnection);
+  const deleteTaskConnection = useCardStore((state) => state.deleteTaskConnection);
   const toggleCardExpansion = useCardStore((state) => state.toggleCardExpansion);
   const addTask = useCardStore((state) => state.addTask);
   const upDateTaskConnections =useCardStore((state)=> state.upDateTaskConnections);
   const upDateTasks =useCardStore((state)=> state.upDateTasks);
+  const taskConnections= useCardStore((state)=>state.taskConnections)
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -82,19 +84,14 @@ export function CheckListCard({
             console.log('data fetch task Modified', updatedTask);
             upDateTasks(updatedTask);
             console.log('updated task in CL', updatedTask);
+            setForceUpdate(prev => !prev); // Forcer le re-rendu
           });
         } else {
           console.error('data.tasks is not an array:', data.tasks);
         }
-  
-        if (Array.isArray(data.tasksConnections)) {
-          data.tasksConnections.forEach(taskConnection => {
-            upDateTaskConnections(taskConnection);
-          });
-        } else {
-          console.error('data.tasksConnections is not an array:', data.tasksConnections);
-        }
-  
+  setTasksConnections(data.tasksConnections);
+    
+  setForceUpdate(prev => !prev);
         console.log('localTasks :', localTasks);
       } catch (error) {
         console.error('Failed to fetch tasks:', error);
@@ -102,9 +99,19 @@ export function CheckListCard({
     };
   
     fetchTasks();
-  }, []);
+    console.log('localTasks 2:', localTasks);
+  }, [forceUpdate]);
 
-
+  useEffect(() => {
+    if (Array.isArray(tasksConnections)) {
+         
+      tasksConnections.forEach(taskConnection => {
+        console.log('taskConnection3 :', taskConnection);
+        upDateTaskConnections(taskConnection);
+      });
+    } else {
+      console.error('data.tasksConnections is not an array:', tasksConnections);
+    }},[tasksConnections]);
   const handleSave = () => {
     updateCard(id, {
       title: localTitle,
@@ -151,7 +158,7 @@ export function CheckListCard({
   };
 
   const handleTaskConnect = (taskId: string) => {
-    const taskName = `task-${taskId}`;
+    const taskName = `${taskId}`;
     console.log('CheckListCard - handleTaskConnect:', {
       cardId: id,
       taskId,
@@ -163,7 +170,8 @@ export function CheckListCard({
 //    useCardStore.getState().startTaskConnection(connectionId);
   };
   const handleTaskConnectionDelete = (startId: string, taskId: string) => {
-    deleteConnection(startId, `${taskId}`);
+    console.log('(handleTaskConnectionDelete', {startId , taskId,incomingConnections,taskConnections})
+    deleteTaskConnection(startId, `${taskId}`);
   };
 
    // Ne pas propager isConnecting à la tâche, utiliser une comparaison locale
@@ -210,8 +218,8 @@ export function CheckListCard({
           )}
           <div className="flex gap-2">
             <ColorPicker onColorSelect={(color) => updateCard(id, { color })} currentColor={color} />
-            <button
-              onClick={()=>{onConnect}}
+       {/*   <button
+              onClick={()=>{onConnect()}}
               className={`p-1 hover:bg-gray-100 rounded ${
                 isConnecting ? 'bg-indigo-100 text-indigo-600' : ''
               }`}
@@ -226,7 +234,7 @@ export function CheckListCard({
               >
                 <Unlink size={18} />
               </button>
-            )}
+            )}*/}
             <button
               onClick={() => deleteCard(id)}
               className="p-1 hover:bg-red-100 text-red-600 rounded"
@@ -283,7 +291,7 @@ export function CheckListCard({
             isConnecting={isTaskConnecting(task.id)}
             onUpdate={(updates) => handleTaskUpdate(task.id, updates)}
             onConnect={() => handleTaskConnect(task.id)}
-            incomingConnections={incomingConnections.filter(conn => 
+            incomingConnections={taskConnections.filter(conn => 
               conn.end === `${task.id}`
             )}
             onDeleteConnection={(startId) => 

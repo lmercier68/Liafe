@@ -133,7 +133,7 @@ interface CardState {
   deleteConnection: (start: string, end: string) => void;
   addConnection: (connection: Omit<Connection, 'style' | 'color'>, style: 'solid' | 'dashed', color: string) => void;
   
-
+  deleteTaskConnection: (start: string, end: string) => void;
   updateConnection: (start: string, end: string, updates: Partial<Connection>) => void;
   addTaskConnection: (taskConnection: Omit<taskConnection, 'style' | 'color'>, style: 'solid' | 'dashed', color: string) => void;
   upDateTaskConnections: (tasksConnection:taskConnection)=> void;
@@ -655,6 +655,14 @@ if(!elementFrom)console.log("pas d'element from")
         conn => !(conn.start === start && conn.end === end)
       ),
     }));
+  },
+  deleteTaskConnection:(start,end)=>{
+    set((state) => ({
+      taskConnections: state.taskConnections.filter(
+        conn => !(conn.start === start && conn.end === end)
+      ),
+    }));
+
   },
   updateConnection: (start, end, updates) => {
     set((state) => ({

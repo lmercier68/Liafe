@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'lucide-react';
+import { Link, Unlink } from 'lucide-react';
 import { useI18n } from '../i18n/useTranslation';
 
 interface TaskProps {
@@ -86,7 +86,14 @@ export function Task({
           <Link size={16}  onClick={handleConnectClick}/>
         </button>
       </div>
-
+      {incomingConnections.length > 0 && (
+              <button
+               onClick={() => onDeleteConnection(incomingConnections[0].start)}
+                className="p-1 hover:bg-red-100 text-red-600 rounded"
+              >
+                <Unlink size={18} />
+              </button>
+            )}
       {(task.dueDate || task.completedDate) && (
         <div className="mt-1 text-sm">
           {task.isCompleted ? (
