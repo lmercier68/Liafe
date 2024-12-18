@@ -161,7 +161,7 @@ function App() {
     }
     if (connectingFrom && connectingTo && taskParentCardId) {
       console.log('app - ajout d une nouvelle task connection',{from:connectingFrom,To :connectingTo})
-      addTaskConnection({ start: connectingFrom, end: connectingTo }, style, color);
+      addTaskConnection({ start: connectingFrom, end: connectingTo,set_id:'' }, style, color);
       setConnectingFrom(null);
       setConnectingTo(null);
       setTaskParentCardId(null);
@@ -400,7 +400,8 @@ function App() {
             const endCard = cards.find(c => c.id === taskConnection.end);
             if(!startCard || !endCard)
 
-
+//DEBUG
+/*
             console.log('Rendering task connection:', {
               taskConnections: {taskConnections},
               startId: taskConnection.start,
@@ -410,6 +411,7 @@ function App() {
               startCard,
               endCard
             });
+*/
         //    if(!startCard)startCard=connection.start;
            // if (!startCard || !endCard) return null;
             

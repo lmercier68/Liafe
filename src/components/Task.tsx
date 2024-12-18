@@ -42,7 +42,8 @@ export function Task({
     e.stopPropagation(); // Empêcher la propagation vers la carte parente
     onConnect(task.id);
   };
-
+//DEBUG
+/*
   console.log('Task - render:', {
     taskId: task.id,
     connectionId: taskConnectionId,
@@ -50,7 +51,7 @@ export function Task({
     incomingConnections,
     connectFrom
   });
-
+*/
   return (
     <div
       id={taskConnectionId}
