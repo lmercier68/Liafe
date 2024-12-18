@@ -286,14 +286,20 @@ function App() {
       <ImageCard
         {...card}
         isConnecting={connectingFrom === card.id}
-        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        incomingConnections={[
+          ...connections.filter(conn => conn.end === card.id),
+          ...taskConnections.filter(conn => conn.end === card.id)
+        ]}
         onConnect={() => handleConnect(card.id)}
       />
     ) : card.cardType === 'contact' ? (
       <Card
         {...card}
         isConnecting={connectingFrom === card.id}
-        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        incomingConnections={[
+          ...connections.filter(conn => conn.end === card.id),
+          ...taskConnections.filter(conn => conn.end === card.id)
+        ]}
         onConnect={() => handleConnect(card.id)}
       />
     ) : card.cardType === 'budget' ? (
@@ -302,7 +308,10 @@ function App() {
         budgetType={card.budgetType}
         budgetData={card.budgetData || { totalAmount: 0, availableAmount: 0, expenses: [] }}
         isConnecting={connectingFrom === card.id}
-        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        incomingConnections={[
+          ...connections.filter(conn => conn.end === card.id),
+          ...taskConnections.filter(conn => conn.end === card.id)
+        ]}
        
         onConnect={() => handleConnect(card.id)}
       />
@@ -310,13 +319,19 @@ function App() {
       <LocationCard
         {...card}
         isConnecting={connectingFrom === card.id}
-        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        incomingConnections={[
+          ...connections.filter(conn => conn.end === card.id),
+          ...taskConnections.filter(conn => conn.end === card.id)
+        ]}
         onConnect={() => handleConnect(card.id)}
       />
     ) : card.cardType === 'itineraire' ? (
       <ItineraireCard {...card} 
       isConnecting={connectingFrom === card.id}
-      incomingConnections={connections.filter(conn => conn.end === card.id)}
+      incomingConnections={[
+        ...connections.filter(conn => conn.end === card.id),
+        ...taskConnections.filter(conn => conn.end === card.id)
+      ]}
       onConnect={() => handleConnect(card.id)}
     />
     ) : card.cardType === 'checklist' ? (
@@ -324,7 +339,10 @@ function App() {
         {...card}
         isConnecting={connectingFrom === card.id} 
         connectFrom={connectingFrom}
-        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        incomingConnections={[
+          ...connections.filter(conn => conn.end === card.id),
+          ...taskConnections.filter(conn => conn.end === card.id)
+        ]}
         onConnectTask={(taskId,cardId,taskName) => {handleConnectTask(taskId,cardId,taskName)}} // La connexion est gérée au niveau de la tâche
         onConnect={() => handleConnect(card.id)}
       />
