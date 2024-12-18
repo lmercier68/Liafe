@@ -333,7 +333,10 @@ function App() {
       <Card
         {...card}
         isConnecting={connectingFrom === card.id}
-        incomingConnections={connections.filter(conn => conn.end === card.id)}
+        incomingConnections={[
+          ...connections.filter(conn => conn.end === card.id),
+          ...taskConnections.filter(conn => conn.end === card.id)
+        ]}
         onConnect={() => handleConnect(card.id)}
       />
     )}

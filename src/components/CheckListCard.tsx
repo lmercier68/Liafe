@@ -99,7 +99,7 @@ const [tasksConnections,setTasksConnections] =useState([]);
     };
   
     fetchTasks();
-    console.log('localTasks 2:', localTasks);
+
   }, [forceUpdate]);
 
   useEffect(() => {

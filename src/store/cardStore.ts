@@ -655,6 +655,11 @@ if(!elementFrom)console.log("pas d'element from")
         conn => !(conn.start === start && conn.end === end)
       ),
     }));
+    set((state) => ({
+      taskConnections: state.taskConnections.filter(
+        conn => !(conn.start === start && conn.end === end)
+      ),
+    }));
   },
   deleteTaskConnection:(start,end)=>{
     set((state) => ({
